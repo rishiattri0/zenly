@@ -23,7 +23,7 @@ export default function HeroSection() {
           <div className="mx-auto max-w-7xl px-6 md:px-12">
             <div className="text-center sm:mx-auto sm:w-10/12 lg:mr-auto lg:mt-0 lg:w-4/5">
               <Link
-                href="/"
+                href="/#about"
                 className="rounded-(--radius) mx-auto flex w-fit items-center gap-2 border p-1 pr-3"
               >
                 <span className="text-sm">About Us</span>
@@ -31,7 +31,7 @@ export default function HeroSection() {
                 <ArrowRight className="size-4" />
               </Link>
 
-              <h1 className="mt-8 text-4xl font-extrabold md:text-5xl xl:text-7xl xl:[line-height:1.125]">
+              <h1 className="mt-8 text-5xl font-extrabold md:text-5xl xl:text-7xl xl:[line-height:1.125]">
                 ZENLY
               </h1>
               <p className="mx-auto mt-8 hidden max-w-2xl text-wrap text-lg sm:block">
