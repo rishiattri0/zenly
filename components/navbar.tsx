@@ -14,6 +14,7 @@ const menuItems = [
   { name: "Features", href: "#features" },
   { name: "About", href: "#about" },
   { name: "Reviews", href: "#Reviews" },
+  { name: "Contact", href: "#contact" },
 ];
 
 export default function Navbar() {

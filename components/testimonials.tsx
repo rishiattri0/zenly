@@ -119,12 +119,12 @@ export default function WallOfLoveSection() {
           <div className="text-center">
             <h2 className="text-5xl font-semibold">Loved by the Community</h2>
           </div>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 md:mt-12 lg:grid-cols-3">
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 md:mt-12 lg:grid-cols-3 ">
             {testimonialChunks.map((chunk, chunkIndex) => (
-              <div key={chunkIndex} className="space-y-3">
+              <div key={chunkIndex} className="space-y-3 ">
                 {chunk.map(({ name, role, quote, image }, index) => (
-                  <Card key={index}>
-                    <CardContent className="grid grid-cols-[auto_1fr] gap-3 pt-6">
+                  <Card key={index} className="hover:shadow-2xl cursor-pointer">
+                    <CardContent className="grid grid-cols-[auto_1fr] gap-3 pt-6 ">
                       <Avatar className="size-9">
                         <AvatarImage
                           alt={name}

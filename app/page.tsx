@@ -7,6 +7,7 @@ import StatsSection from "@/components/stats";
 import WallOfLoveSection from "@/components/testimonials";
 import FooterSection from "@/components/footer";
 import ContentSection from "@/components/content-5";
+import CallToAction from "@/components/call-to-action";
 
 export default function Home() {
   return (
@@ -17,6 +18,7 @@ export default function Home() {
       <ContentSection />
       <StatsSection />
       <WallOfLoveSection />
+      <CallToAction />
       <FooterSection />
     </div>
   );

@@ -4,27 +4,19 @@ import Link from "next/link";
 const links = [
   {
     title: "Features",
-    href: "#",
-  },
-  {
-    title: "Solution",
-    href: "#",
-  },
-  {
-    title: "Customers",
-    href: "#",
-  },
-  {
-    title: "Pricing",
-    href: "#",
-  },
-  {
-    title: "Help",
-    href: "#",
+    href: "#features",
   },
   {
     title: "About",
-    href: "#",
+    href: "#about",
+  },
+  {
+    title: "Contact",
+    href: "#contact",
+  },
+  {
+    title: "Reviews",
+    href: "#Reviews",
   },
 ];
 
@@ -176,7 +168,7 @@ export default function FooterSection() {
         </div>
         <span className="text-muted-foreground block text-center text-sm">
           {" "}
-          © {new Date().getFullYear()} Tailark, All rights reserved
+          © {new Date().getFullYear()} ZENLY, All rights reserved
         </span>
       </div>
     </footer>
