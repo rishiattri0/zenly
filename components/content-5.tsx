@@ -14,27 +14,29 @@ export default function ContentSection() {
             designed to guide you on your journey to better mental health.
           </p>
         </div>
-        <img
-          className="rounded-(--radius) grayscale"
-          src="https://images.unsplash.com/photo-1616587226960-4a03badbe8bf?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-          alt="team image"
-          height=""
-          width=""
-          loading="lazy"
-        />
+        <div className="flex justify-center">
+          <img
+            className="rounded-(--radius) grayscale"
+            src="https://imgs.search.brave.com/6lfry1-PHxaKl0Atwpot-uDOrMWCK0PIT53x31IPrXw/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9idXJz/dC5zaG9waWZ5Y2Ru/LmNvbS9waG90b3Mv/aGFwcHktd29tYW4t/b24tY29tcHV0ZXIu/anBnP3dpZHRoPTEw/MDAmZm9ybWF0PXBq/cGcmZXhpZj0wJmlw/dGM9MA"
+            alt="team image"
+            height=""
+            width=""
+            loading="lazy"
+          />
+        </div>
 
-        <div className="relative mx-auto grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-8 lg:grid-cols-4">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
+        <div className="relative mx-auto grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-8 lg:grid-cols-4 text-center ">
+          <div className="space-y-3 ">
+            <div className="flex items-center gap-2 justify-center">
               <Zap className="size-4" />
-              <h3 className="text-sm font-medium">Faaast</h3>
+              <h3 className="text-sm font-medium ">Faaast</h3>
             </div>
             <p className="text-muted-foreground text-sm">
               Fast response to your needs so you don’t have to wait.
             </p>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-center">
               <Cpu className="size-4" />
               <h3 className="text-sm font-medium">Powerful</h3>
             </div>
@@ -43,7 +45,7 @@ export default function ContentSection() {
             </p>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-center">
               <Lock className="size-4" />
               <h3 className="text-sm font-medium">Security</h3>
             </div>
@@ -52,7 +54,7 @@ export default function ContentSection() {
             </p>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-center">
               <Sparkles className="size-4" />
 
               <h3 className="text-sm font-medium">AI Powered</h3>

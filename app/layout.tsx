@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Zenly",
+  title: "Zenly - wellness companion",
   description: "Mental health buddy",
 };
 
