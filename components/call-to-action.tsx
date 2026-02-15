@@ -1,6 +1,3 @@
-import { Button } from "@/components/ui/button";
-import { Mail, SendHorizonal } from "lucide-react";
-
 export default function CallToAction() {
   return (
     <section className="py-16 md:py-32" id="contact">
@@ -10,7 +7,7 @@ export default function CallToAction() {
             Contact Us
           </h2>
           <p className="mt-4">
-            We'd love to hear from you! If you have questions about our
+            We&apos;d love to hear from you! If you have questions about our
             services.
           </p>
 

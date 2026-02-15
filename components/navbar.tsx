@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import "swiper/css";
 import "swiper/css/autoplay";
@@ -6,9 +7,12 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-coverflow";
 import Link from "next/link";
-import { ArrowRight, Menu, Rocket, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X, LayoutDashboard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
+import { Logo } from "@/components/logo";
+import { useSession } from "@/lib/contexts/session-context";
 
 const menuItems = [
   { name: "Features", href: "#features" },
@@ -19,6 +23,18 @@ const menuItems = [
 
 export default function Navbar() {
   const [menuState, setMenuState] = React.useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, loading, signOut } = useSession();
+
+  const isLanding = pathname === "/";
+  const showNavLinks = isLanding;
+
+  const handleSignOut = () => {
+    setMenuState(false);
+    Promise.resolve(signOut()).then(() => router.push("/"));
+  };
+
   return (
     <header>
       <nav
@@ -38,7 +54,7 @@ export default function Navbar() {
 
               <button
                 onClick={() => setMenuState(!menuState)}
-                aria-label={menuState == true ? "Close Menu" : "Open Menu"}
+                aria-label={menuState ? "Close Menu" : "Open Menu"}
                 className="relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden"
               >
                 <Menu className="in-data-[state=active]:rotate-180 in-data-[state=active]:scale-0 in-data-[state=active]:opacity-0 m-auto size-6 duration-200" />
@@ -47,33 +63,68 @@ export default function Navbar() {
             </div>
 
             <div className="bg-background in-data-[state=active]:block lg:in-data-[state=active]:flex mb-6 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-3xl border p-6 shadow-2xl shadow-zinc-300/20 md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none dark:shadow-none dark:lg:bg-transparent">
-              <div className="lg:pr-4">
-                <ul className="space-y-6 text-base lg:flex lg:gap-8 lg:space-y-0 lg:text-sm">
-                  {menuItems.map((item, index) => (
-                    <li key={index}>
-                      <Link
-                        href={item.href}
-                        className="text-muted-foreground hover:text-accent-foreground block duration-150"
-                      >
-                        <span>{item.name}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {showNavLinks && (
+                <div className="lg:pr-4">
+                  <ul className="space-y-6 text-base lg:flex lg:gap-8 lg:space-y-0 lg:text-sm">
+                    {menuItems.map((item, index) => (
+                      <li key={index}>
+                        <Link
+                          href={item.href}
+                          className="text-muted-foreground hover:text-accent-foreground block duration-150"
+                        >
+                          <span>{item.name}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <AnimatedThemeToggler />
 
               <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit lg:border-l lg:pl-6">
-                <Button asChild variant="outline" size="sm">
-                  <Link href="#">
-                    <span>Login</span>
-                  </Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link href="#">
-                    <span>Login</span>
-                  </Link>
-                </Button>
+                {!loading &&
+                  (isAuthenticated ? (
+                    <>
+                      <Button asChild variant="outline" size="sm">
+                        <Link
+                          href="/dashboard"
+                          onClick={() => setMenuState(false)}
+                        >
+                          <LayoutDashboard className="size-4" />
+                          <span>Dashboard</span>
+                        </Link>
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                        <LogOut className="size-4" />
+                        <span>Sign out</span>
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button asChild variant="outline" size="sm">
+                        <Link
+                          href={
+                            pathname === "/dashboard"
+                              ? "/login?redirect=/dashboard"
+                              : "/login"
+                          }
+                        >
+                          <span>Login</span>
+                        </Link>
+                      </Button>
+                      <Button asChild size="sm">
+                        <Link
+                          href={
+                            pathname === "/dashboard"
+                              ? "/signup?redirect=/dashboard"
+                              : "/signup"
+                          }
+                        >
+                          <span>Sign up</span>
+                        </Link>
+                      </Button>
+                    </>
+                  ))}
               </div>
             </div>
           </div>

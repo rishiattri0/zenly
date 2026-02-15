@@ -20,6 +20,6 @@
   },
 
   "registries": {
-    "@tailark": "https://tailark.com/r/{name}.json"
+    "@zenly": "https://zenly.com/r/{name}.json"
   }
 }

@@ -7,8 +7,8 @@ export default function StatsSection() {
             Our Community in Numbers
           </h2>
           <p>
-            Every statistic represents a step forward in someone's journey to
-            well-being. We're honored to provide a supportive space for healing
+            Every statistic represents a step forward in someone&apos;s journey to
+            well-being. We&apos;re honored to provide a supportive space for healing
             and growth.
           </p>
         </div>

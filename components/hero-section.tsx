@@ -43,11 +43,16 @@ export default function HeroSection() {
                 helps you track your journey.
               </p>
 
-              <div className="mt-8">
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <Button size="lg" asChild>
-                  <Link href="#">
+                  <Link href="/signup">
                     <Rocket className="relative size-4" />
-                    <span className="text-nowrap">Start Expressing</span>
+                    <span className="text-nowrap">Get started</span>
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/login">
+                    <span className="text-nowrap">Sign in</span>
                   </Link>
                 </Button>
               </div>

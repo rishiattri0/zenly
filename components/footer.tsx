@@ -1,26 +1,20 @@
-import { Logo } from "@/components/logo";
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const links = [
-  {
-    title: "Features",
-    href: "#features",
-  },
-  {
-    title: "About",
-    href: "#about",
-  },
-  {
-    title: "Contact",
-    href: "#contact",
-  },
-  {
-    title: "Reviews",
-    href: "#Reviews",
-  },
+  { title: "Features", href: "#features" },
+  { title: "About", href: "#about" },
+  { title: "Contact", href: "#contact" },
+  { title: "Reviews", href: "#Reviews" },
 ];
 
 export default function FooterSection() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const linkHref = (href: string) => (isHome ? href : `/${href}`);
+
   return (
     <footer className="py-16 md:py-32">
       <div className="mx-auto max-w-5xl px-6">
@@ -32,7 +26,7 @@ export default function FooterSection() {
           {links.map((link, index) => (
             <Link
               key={index}
-              href={link.href}
+              href={linkHref(link.href)}
               className="text-muted-foreground hover:text-primary block duration-150"
             >
               <span>{link.title}</span>
