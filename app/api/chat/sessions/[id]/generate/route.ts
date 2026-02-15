@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-session";
 import { getChatMessages, addChatMessage, updateChatSessionUpdatedAt } from "@/lib/db/chat";
 import { sql } from "@/lib/db";
+export const dynamic = "force-dynamic";
 
 async function ensureSessionBelongsToUser(sessionId: string, userId: string): Promise<boolean> {
   if (!sql) return false;
-  const rows = await sql`
+  const result = (await sql`
     SELECT id FROM public.zenly_chat_sessions WHERE id = ${sessionId} AND user_id = ${userId} LIMIT 1
-  `;
-  return rows.length > 0;
+  `) as unknown as Array<Record<string, unknown>>;
+  return Array.isArray(result) && result.length > 0;
 }
 
 export async function POST(

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-session";
 import { getChatSessionsByUser, createChatSession } from "@/lib/db/chat";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const user = await getSession();

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createUser, createSession } from "@/lib/db/auth";
 import { setSessionCookie } from "@/lib/auth-session";
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {

@@ -25,7 +25,7 @@ export async function insertActivity(params: {
   moodNote?: string | null;
 }): Promise<{ id: string } | null> {
   if (!sql) return null;
-  const rows = await sql`
+  const rows = (await sql`
     INSERT INTO public.zenly_activities (user_id, type, name, description, duration, completed, mood_score, mood_note)
     VALUES (
       ${params.userId},
@@ -38,8 +38,8 @@ export async function insertActivity(params: {
       ${params.moodNote ?? null}
     )
     RETURNING id
-  `;
-  const row = rows[0] as { id: string } | undefined;
+  `) as unknown as Array<{ id: string }>;
+  const row = rows[0];
   return row ? { id: row.id } : null;
 }
 

@@ -29,12 +29,12 @@ export async function getChatSessionsByUser(userId: string): Promise<ChatSession
 
 export async function createChatSession(userId: string, title = "Chat"): Promise<{ id: string } | null> {
   if (!sql) return null;
-  const rows = await sql`
+  const rows = (await sql`
     INSERT INTO public.zenly_chat_sessions (user_id, title)
     VALUES (${userId}, ${title})
     RETURNING id
-  `;
-  const row = rows[0] as { id: string } | undefined;
+  `) as unknown as Array<{ id: string }>;
+  const row = rows[0];
   return row ? { id: row.id } : null;
 }
 
@@ -55,12 +55,12 @@ export async function addChatMessage(
   content: string
 ): Promise<{ id: string } | null> {
   if (!sql) return null;
-  const rows = await sql`
+  const rows = (await sql`
     INSERT INTO public.zenly_chat_messages (chat_session_id, role, content)
     VALUES (${chatSessionId}, ${role}, ${content})
     RETURNING id
-  `;
-  const row = rows[0] as { id: string } | undefined;
+  `) as unknown as Array<{ id: string }>;
+  const row = rows[0];
   return row ? { id: row.id } : null;
 }
 

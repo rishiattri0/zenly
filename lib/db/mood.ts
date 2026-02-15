@@ -6,12 +6,12 @@ export async function insertMoodEntry(
   note?: string
 ): Promise<{ id: string } | null> {
   if (!sql) return null;
-  const rows = await sql`
+  const rows = (await sql`
     INSERT INTO public.zenly_mood_entries (user_id, score, note)
     VALUES (${userId}, ${score}, ${note ?? null})
     RETURNING id
-  `;
-  const row = rows[0] as { id: string } | undefined;
+  `) as unknown as Array<{ id: string }>;
+  const row = rows[0];
   return row ? { id: row.id } : null;
 }
 

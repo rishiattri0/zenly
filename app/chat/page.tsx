@@ -119,8 +119,9 @@ export default function ChatPage() {
       const next = [{ id: data.id, title: data.title || "Chat" }, ...sessions];
       setSessions(next);
       setSessionId(data.id);
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to create session");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message || "Failed to create session");
     }
   }
 
@@ -161,8 +162,9 @@ export default function ChatPage() {
         rest.splice(idx, 1);
         return [updated, ...rest];
       });
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to send message");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message || "Failed to send message");
     } finally {
       setLoading(false);
     }
