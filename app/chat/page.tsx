@@ -345,7 +345,7 @@ export default function ChatPage() {
               <p className="text-xs sm:text-sm text-destructive">{error}</p>
             </div>
           )}
-          <div className="p-3 sm:p-4">
+          <div className="p-3 sm:p-4 pb-[env(safe-area-inset-bottom,1rem)]">
             <div className="flex gap-2 sm:gap-3 max-w-3xl sm:max-w-4xl mx-auto">
               <div className="flex-1 relative">
                 <Input

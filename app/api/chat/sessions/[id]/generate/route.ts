@@ -57,9 +57,15 @@ export async function POST(
       },
       body: JSON.stringify({
         model,
-        temperature: 0.7,
+        temperature: 0.8,
         stream: false,
-        messages,
+        messages: [
+          {
+            role: "system",
+            content: "You are Zenly, a friendly and supportive mental wellness companion. Be warm, caring, and conversational. Keep responses relatively short (2-3 sentences max) and casual. Use natural language like a caring friend would. Be encouraging but not overly formal. Focus on being supportive and understanding."
+          },
+          ...messages
+        ],
       }),
     });
 
