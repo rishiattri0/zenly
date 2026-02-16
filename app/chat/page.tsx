@@ -262,7 +262,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen bg-background flex">
+    <div className="h-[calc(100vh-4rem)] bg-background flex">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
