@@ -1,23 +1,50 @@
 # Zenly Environment Setup Script (PowerShell)
 Write-Host "🚀 Setting up Zenly environment..." -ForegroundColor Green
 
-# Create .env.local if it doesn't exist
+# Create .env with safe defaults (can be committed)
+Write-Host "📝 Creating .env file with defaults..." -ForegroundColor Yellow
+$envDefaults = @"
+# Default Environment Variables (safe to commit)
+
+# Session Security (Development default - change in production)
+SESSION_SECRET=dev-secret-key-change-in-production
+
+# AI Configuration
+GROQ_MODEL=llama-3.1-8b-instant
+
+# Database Connection (Optional for local dev)
+# DATABASE_URL=postgresql://USER:PASSWORD@HOST/neondb?sslmode=require
+"@
+
+if (-not (Test-Path ".env")) {
+    $envDefaults | Out-File -FilePath ".env" -Encoding UTF8
+    Write-Host "✅ .env created with safe defaults!" -ForegroundColor Green
+} else {
+    Write-Host "⚠️  .env already exists. Skipping creation." -ForegroundColor Yellow
+}
+
+# Create .env.local for personal secrets (never commit)
 if (-not (Test-Path ".env.local")) {
-    Write-Host "📝 Creating .env.local file..." -ForegroundColor Yellow
+    Write-Host "📝 Creating .env.local file for your secrets..." -ForegroundColor Yellow
     
     # Generate a random secret key
     $secret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 32 | ForEach-Object {[char]$_})
     
-    $envContent = @"
-# Database Connection (Optional for local dev)
-# DATABASE_URL=postgresql://USER:PASSWORD@HOST/neondb?sslmode=require
+    $envLocal = @"
+# Personal Environment Variables (NEVER commit to git)
 
-# Session Security (Required for authentication)
+# Session Security (Required - replace with your own secret)
 SESSION_SECRET=$secret
+
+# AI Configuration (Required - get from https://console.groq.com/keys)
+GROQ_API_KEY=your-groq-api-key-here
+
+# Database Connection (Required for production)
+# DATABASE_URL=postgresql://USER:PASSWORD@HOST/neondb?sslmode=require
 "@
     
-    $envContent | Out-File -FilePath ".env.local" -Encoding UTF8
-    Write-Host "✅ .env.local created successfully!" -ForegroundColor Green
+    $envLocal | Out-File -FilePath ".env.local" -Encoding UTF8
+    Write-Host "✅ .env.local created for your secrets!" -ForegroundColor Green
 } else {
     Write-Host "⚠️  .env.local already exists. Skipping creation." -ForegroundColor Yellow
 }
