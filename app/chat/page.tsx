@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Plus, MessageSquare, Loader2, Bot, User } from "lucide-react";
+import { Send, Plus, MessageSquare, Loader2, Bot, User, X, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Role = "user" | "assistant";
@@ -25,35 +25,37 @@ function SessionList({
   selectedId,
   onSelect,
   onNew,
+  isMobile = false,
 }: {
   sessions: ChatSession[];
   selectedId: string | null;
   onSelect: (id: string) => void;
   onNew: () => void;
+  isMobile?: boolean;
 }) {
   return (
-    <div className="h-full bg-background border-r border-border">
-      <div className="p-4 border-b border-border">
+    <div className="h-full bg-background border-r border-border flex flex-col">
+      <div className="p-3 sm:p-4 border-b border-border flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-primary" />
-            <h2 className="font-semibold text-lg">Conversations</h2>
+            <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+            <h2 className="font-semibold text-sm sm:text-lg">Conversations</h2>
           </div>
           <Button 
             size="sm" 
             onClick={onNew}
-            className="gap-2 bg-primary hover:bg-primary/90"
+            className="gap-1 sm:gap-2 bg-primary hover:bg-primary/90 h-8 sm:h-auto px-2 sm:px-3"
           >
-            <Plus className="h-4 w-4" />
-            New Chat
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">New Chat</span>
           </Button>
         </div>
       </div>
       <div className="flex-1 overflow-auto">
         {sessions.length === 0 ? (
-          <div className="p-8 text-center">
-            <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">No conversations yet</p>
+          <div className="p-4 sm:p-8 text-center">
+            <MessageSquare className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-2 sm:mb-3" />
+            <p className="text-xs sm:text-sm text-muted-foreground">No conversations yet</p>
             <p className="text-xs text-muted-foreground mt-1">Start your first chat below</p>
           </div>
         ) : (
@@ -62,24 +64,23 @@ function SessionList({
               <button
                 key={s.id}
                 className={cn(
-                  "w-full text-left p-4 hover:bg-muted/50 transition-colors",
+                  "w-full text-left p-3 sm:p-4 hover:bg-muted/50 transition-colors",
                   selectedId === s.id && "bg-muted border-l-2 border-primary"
                 )}
                 onClick={() => onSelect(s.id)}
               >
-                <div className="flex items-start gap-3">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <MessageSquare className="h-4 w-4 text-primary" />
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{s.title || "New Conversation"}</div>
+                    <div className="text-xs sm:text-sm font-medium truncate">{s.title || "New Conversation"}</div>
                     {s.updated_at && (
                       <div className="text-xs text-muted-foreground mt-1">
                         {new Date(s.updated_at).toLocaleDateString('en-US', { 
                           month: 'short', 
                           day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
+                          ...(isMobile ? {} : { hour: '2-digit', minute: '2-digit' })
                         })}
                       </div>
                     )}
@@ -102,14 +103,14 @@ function MessageList({ messages }: { messages: ChatMessage[] }) {
   }, [messages]);
 
   return (
-    <div className="flex-1 overflow-auto p-6 space-y-4">
+    <div className="flex-1 overflow-auto p-3 sm:p-6 space-y-3 sm:space-y-4">
       {messages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full text-center">
-          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <Bot className="h-8 w-8 text-primary" />
+        <div className="flex flex-col items-center justify-center h-full text-center px-4">
+          <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
+            <Bot className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">Welcome to Zenly Chat</h3>
-          <p className="text-sm text-muted-foreground max-w-md">
+          <h3 className="text-base sm:text-lg font-semibold mb-2">Welcome to Zenly Chat</h3>
+          <p className="text-sm text-muted-foreground max-w-sm sm:max-w-md">
             I&apos;m here to support your mental wellness journey. How are you feeling today?
           </p>
         </div>
@@ -119,31 +120,31 @@ function MessageList({ messages }: { messages: ChatMessage[] }) {
             <div
               key={m.id}
               className={cn(
-                "flex gap-3 max-w-4xl",
+                "flex gap-2 sm:gap-3 max-w-3xl sm:max-w-4xl",
                 m.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
               )}
             >
               <div className="flex-shrink-0">
                 <div className={cn(
-                  "h-8 w-8 rounded-full flex items-center justify-center",
+                  "h-6 w-6 sm:h-8 sm:w-8 rounded-full flex items-center justify-center",
                   m.role === "user" 
                     ? "bg-primary text-primary-foreground" 
                     : "bg-muted border border-border"
                 )}>
                   {m.role === "user" ? (
-                    <User className="h-4 w-4" />
+                    <User className="h-3 w-3 sm:h-4 sm:w-4" />
                   ) : (
-                    <Bot className="h-4 w-4 text-muted-foreground" />
+                    <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                   )}
                 </div>
               </div>
               <div className={cn(
-                "flex-1 px-4 py-3 rounded-2xl",
+                "flex-1 px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl",
                 m.role === "user" 
                   ? "bg-primary text-primary-foreground" 
                   : "bg-muted border border-border"
               )}>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.content}</p>
+                <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{m.content}</p>
                 <div className="text-xs opacity-70 mt-1">
                   {new Date(m.created_at).toLocaleTimeString('en-US', { 
                     hour: '2-digit', 
@@ -167,6 +168,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Load sessions on mount
   useEffect(() => {
@@ -260,9 +262,37 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] bg-background flex">
-      {/* Sidebar */}
-      <div className="w-80 h-full flex-shrink-0 hidden md:flex">
+    <div className="h-screen bg-background flex">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Mobile Sidebar */}
+      <div className={cn(
+        "fixed inset-y-0 left-0 z-50 w-72 sm:w-80 bg-background border-r border-border transform transition-transform duration-300 ease-in-out md:hidden",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <SessionList
+          sessions={sessions}
+          selectedId={sessionId}
+          onSelect={(id) => {
+            setSessionId(id);
+            setSidebarOpen(false);
+          }}
+          onNew={() => {
+            onNewSession();
+            setSidebarOpen(false);
+          }}
+          isMobile={true}
+        />
+      </div>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex md:w-72 lg:w-80 h-full flex-shrink-0">
         <SessionList
           sessions={sessions}
           selectedId={sessionId}
@@ -272,27 +302,35 @@ export default function ChatPage() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full">
+      <div className="flex-1 flex flex-col h-full min-w-0">
         {/* Header */}
-        <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                <Bot className="h-5 w-5 text-white" />
+        <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
+          <div className="flex items-center justify-between p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarOpen(true)}
+                className="md:hidden p-2"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+                <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
               <div>
-                <h1 className="font-semibold text-lg">Zenly Assistant</h1>
-                <p className="text-xs text-muted-foreground">Your mental wellness companion</p>
+                <h1 className="font-semibold text-sm sm:text-lg">Zenly Assistant</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">Your mental wellness companion</p>
               </div>
             </div>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={onNewSession}
-              className="md:hidden gap-2"
+              className="gap-1 sm:gap-2 h-8 sm:h-auto px-2 sm:px-3"
             >
-              <Plus className="h-4 w-4" />
-              New
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">New</span>
             </Button>
           </div>
         </div>
@@ -301,14 +339,14 @@ export default function ChatPage() {
         <MessageList messages={messages} />
 
         {/* Input Area */}
-        <div className="border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
           {error && (
-            <div className="mx-4 mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <p className="text-sm text-destructive">{error}</p>
+            <div className="mx-3 sm:mx-4 mt-3 sm:mt-4 p-2 sm:p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-xs sm:text-sm text-destructive">{error}</p>
             </div>
           )}
-          <div className="p-4">
-            <div className="flex gap-3 max-w-4xl mx-auto">
+          <div className="p-3 sm:p-4">
+            <div className="flex gap-2 sm:gap-3 max-w-3xl sm:max-w-4xl mx-auto">
               <div className="flex-1 relative">
                 <Input
                   placeholder="Share what's on your mind..."
@@ -320,7 +358,7 @@ export default function ChatPage() {
                       onSend();
                     }
                   }}
-                  className="resize-none h-12 pr-12 bg-background border-border focus:border-primary"
+                  className="resize-none h-10 sm:h-12 pr-10 sm:pr-12 bg-background border-border focus:border-primary text-sm"
                   disabled={!sessionId || loading}
                 />
               </div>
@@ -328,17 +366,17 @@ export default function ChatPage() {
                 onClick={onSend} 
                 disabled={!canSend}
                 size="lg"
-                className="gap-2 px-6 bg-primary hover:bg-primary/90"
+                className="gap-1 sm:gap-2 px-3 sm:px-6 bg-primary hover:bg-primary/90 h-10 sm:h-12"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Thinking...
+                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                    <span className="hidden sm:inline">Thinking...</span>
                   </>
                 ) : (
                   <>
-                    <Send className="h-4 w-4" />
-                    Send
+                    <Send className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Send</span>
                   </>
                 )}
               </Button>
