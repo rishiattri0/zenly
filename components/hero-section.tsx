@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, EffectCoverflow } from "swiper/modules";
 import "swiper/css";
@@ -8,11 +8,54 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-coverflow";
 import Link from "next/link";
-import { ArrowRight, Rocket } from "lucide-react";
+import { ArrowRight, Rocket, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Ripple } from "@/components/magicui/ripple";
 
 export default function HeroSection() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch("/api/auth/session", { credentials: "include" })
+      .then(async (res) => {
+        if (mounted) {
+          setIsAuthenticated(res.ok);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsAuthenticated(false);
+          setLoading(false);
+        }
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  if (loading) {
+    return (
+      <main className="overflow-hidden">
+        <section className="relative">
+          <div className="relative py-24 lg:py-28 z-10">
+            <div className="mx-auto max-w-7xl px-6 md:px-12">
+              <div className="text-center sm:mx-auto sm:w-10/12 lg:mr-auto lg:mt-0 lg:w-4/5">
+                <h1 className="mt-8 text-5xl font-extrabold md:text-5xl xl:text-7xl xl:[line-height:1.125]">
+                  ZENLY
+                </h1>
+                <p className="mx-auto mt-8 max-w-2xl text-wrap text-lg sm:block">
+                  An AI-powered wellness companion that listens, supports, and
+                  helps you track your journey.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="overflow-hidden">
       <section className="relative">
@@ -44,17 +87,29 @@ export default function HeroSection() {
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <Button size="lg" asChild>
-                  <Link href="/signup">
-                    <Rocket className="relative size-4" />
-                    <span className="text-nowrap">Get started</span>
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link href="/login">
-                    <span className="text-nowrap">Sign in</span>
-                  </Link>
-                </Button>
+                {isAuthenticated ? (
+                  <Button size="lg" asChild>
+                    <Link href="/dashboard">
+                      <Rocket className="relative size-4" />
+                      <span className="text-nowrap">Get started</span>
+                    </Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button size="lg" asChild>
+                      <Link href="/signup">
+                        <Rocket className="relative size-4" />
+                        <span className="text-nowrap">Get started</span>
+                      </Link>
+                    </Button>
+                    <Button size="lg" variant="outline" asChild>
+                      <Link href="/login">
+                        <User className="size-4" />
+                        <span className="text-nowrap">Sign in</span>
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
