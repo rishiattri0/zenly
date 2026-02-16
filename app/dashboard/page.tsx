@@ -11,10 +11,8 @@ import {
   Moon,
   Heart,
   Trophy,
-  Bell,
   Sparkles,
   MessageSquare,
-  BrainCircuit,
   ArrowRight,
   X,
   Loader2,
@@ -29,16 +27,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { cn } from "@/lib/utils";
-import { MoodForm } from "@/components/mood/mood-form";
-import { AnxietyGames } from "@/components/games/anxiety-games";
-import { getUserActivities, logActivity } from "@/lib/static-dashboard-data";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { getUserActivities } from "@/lib/static-dashboard-data";
+import MoodTracker from "@/components/mood/mood-tracker";
+import MoodForm from "@/components/mood/mood-form";
+import ActivityLogger from "@/components/activities/activity-logger";
+import ChatAIInsights from "@/components/ai/chat-ai-insights";
 import {
   addDays,
   format,
@@ -46,26 +39,11 @@ import {
   startOfDay,
   isWithinInterval,
 } from "date-fns";
-import { ActivityLogger } from "@/components/activities/activity-logger";
 import { useSession } from "@/lib/contexts/session-context";
 import { getAllChatSessions } from "@/lib/api/chat";
 import FooterSection from "@/components/footer";
 
 // Type definitions
-type ActivityLevel = "none" | "low" | "medium" | "high";
-
-interface DayActivity {
-  date: Date;
-  level: ActivityLevel;
-  activities: {
-    type: string;
-    name: string;
-    completed: boolean;
-    time?: string;
-  }[];
-}
-
-// Add this interface near the top with other interfaces
 interface Activity {
   id: string;
   userId: string | null;
@@ -79,6 +57,30 @@ interface Activity {
   moodNote: string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+}
+
+interface ChatSession {
+  id: string;
+  title?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ChatAIInsight {
+  id: string;
+  title: string;
+  description: string;
+  type: "progress" | "recommendation" | "pattern" | "achievement" | "concern";
+  priority: "high" | "medium" | "low";
+  actionable: boolean;
+  data?: Record<string, unknown>;
 }
 
 // Add this interface for stats
@@ -277,12 +279,9 @@ export default function Dashboard() {
 
   // New states for activities and wearables
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [showMoodModal, setShowMoodModal] = useState(false);
   const [showCheckInChat, setShowCheckInChat] = useState(false);
-  const [activityHistory, setActivityHistory] = useState<DayActivity[]>([]);
+  const [showMoodModal, setShowMoodModal] = useState(false);
   const [showActivityLogger, setShowActivityLogger] = useState(false);
-  const [isSavingActivity, setIsSavingActivity] = useState(false);
-  const [isSavingMood, setIsSavingMood] = useState(false);
   const [dailyStats, setDailyStats] = useState<DailyStats>({
     moodScore: null,
     completionRate: 100,
@@ -299,64 +298,26 @@ export default function Dashboard() {
     avgMessagesPerSession: number;
   }>({ totalSessions: 0, totalMessages: 0, lastActivityAt: null, avgMessagesPerSession: 0 });
 
-  // Add this function to transform activities into day activity format
-  const transformActivitiesToDayActivity = (
-    activities: Activity[]
-  ): DayActivity[] => {
-    const days: DayActivity[] = [];
-    const today = new Date();
+  // Chat messages state for AI insights
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
 
-    // Create array for last 28 days
-    for (let i = 27; i >= 0; i--) {
-      const date = startOfDay(subDays(today, i));
-      const dayActivities = activities.filter((activity) =>
-        isWithinInterval(new Date(activity.timestamp), {
-          start: date,
-          end: addDays(date, 1),
-        })
-      );
-
-      // Determine activity level based on number of activities
-      let level: ActivityLevel = "none";
-      if (dayActivities.length > 0) {
-        if (dayActivities.length <= 2) level = "low";
-        else if (dayActivities.length <= 4) level = "medium";
-        else level = "high";
-      }
-
-      days.push({
-        date,
-        level,
-        activities: dayActivities.map((activity) => ({
-          type: activity.type,
-          name: activity.name,
-          completed: activity.completed,
-          time: format(new Date(activity.timestamp), "h:mm a"),
-        })),
-      });
-    }
-
-    return days;
-  };
-
+  
   const loadActivities = useCallback(async () => {
     try {
       const res = await fetch("/api/activities", { credentials: "include" });
       if (!res.ok) {
         const fallback = await getUserActivities("default-user");
         setActivities(fallback);
-        setActivityHistory(transformActivitiesToDayActivity(fallback));
         return;
       }
       const data = await res.json();
       const list = Array.isArray(data) ? data : [];
       setActivities(list);
-      setActivityHistory(transformActivitiesToDayActivity(list));
     } catch (error) {
       console.error("Error loading activities:", error);
       const fallback = await getUserActivities("default-user");
       setActivities(fallback);
-      setActivityHistory(transformActivitiesToDayActivity(fallback));
     }
   }, []);
 
@@ -406,38 +367,76 @@ export default function Dashboard() {
   const fetchDailyStats = useCallback(async () => {
     try {
       const sessions = await getAllChatSessions();
-      let activities: Activity[] = [];
+      
+      // Get mood data from mood API
+      let moodScore = null;
       try {
-        const activitiesResponse = await fetch("/api/activities/today", { credentials: "include" });
-        if (activitiesResponse.ok) {
-          activities = await activitiesResponse.json();
+        const moodResponse = await fetch("/api/mood", { credentials: "include" });
+        if (moodResponse.ok) {
+          const moods = await moodResponse.json();
+          if (Array.isArray(moods) && moods.length > 0) {
+            const averageMood = Math.round(
+              moods.reduce((acc: number, mood: { score: number }) => acc + mood.score, 0) / moods.length
+            );
+            moodScore = averageMood;
+          }
         }
       } catch {
-        // API may not exist yet; use empty list
+        // If mood API fails, try activities as fallback
+        let activities: Activity[] = [];
+        try {
+          const activitiesResponse = await fetch("/api/activities/today", { credentials: "include" });
+          if (activitiesResponse.ok) {
+            activities = await activitiesResponse.json();
+          } else {
+            activities = []; 
+          }
+        } catch {
+          activities = []; 
+        }
+        const moodEntries = activities.filter(
+          (a: Activity) => a.type === "mood" && a.moodScore !== null
+        );
+        if (moodEntries.length > 0) {
+          moodScore = Math.round(
+            moodEntries.reduce(
+              (acc: number, curr: Activity) => acc + (curr.moodScore || 0),
+              0
+            ) / moodEntries.length
+          );
+        }
       }
-      const moodEntries = activities.filter(
-        (a: Activity) => a.type === "mood" && a.moodScore !== null
-      );
-      const averageMood =
-        moodEntries.length > 0
-          ? Math.round(
-              moodEntries.reduce(
-                (acc: number, curr: Activity) => acc + (curr.moodScore || 0),
-                0
-              ) / moodEntries.length
-            )
-          : null;
+      
+      // Get today's activities count
+      let todaysActivitiesCount = 0;
+      try {
+        const activitiesResponse = await fetch("/api/activities", { credentials: "include" });
+        if (activitiesResponse.ok) {
+          const allActivities = await activitiesResponse.json();
+          const today = new Date().toDateString();
+          todaysActivitiesCount = allActivities.filter((activity: { timestamp: string }) => 
+            new Date(activity.timestamp).toDateString() === today
+          ).length;
+        }
+      } catch {
+        // Fallback to local activities state
+        const today = new Date().toDateString();
+        todaysActivitiesCount = activities.filter((activity: { timestamp: Date }) => 
+          new Date(activity.timestamp).toDateString() === today
+        ).length;
+      }
+      
       setDailyStats({
-        moodScore: averageMood,
+        moodScore: moodScore,
         completionRate: 100,
         mindfulnessCount: sessions.length,
-        totalActivities: activities.length,
+        totalActivities: todaysActivitiesCount,
         lastUpdated: new Date(),
       });
     } catch (error) {
       console.error("Error fetching daily stats:", error);
     }
-  }, []);
+  }, [activities]);
 
   // Fetch stats on mount and every 5 minutes
   useEffect(() => {
@@ -473,12 +472,12 @@ export default function Dashboard() {
       description: "Total sessions completed",
     },
     {
-      title: "Total Activities",
+      title: "Today's Activities",
       value: dailyStats.totalActivities.toString(),
       icon: Activity,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
-      description: "Planned for today",
+      description: "Activities completed today",
     },
   ];
 
@@ -487,18 +486,51 @@ export default function Dashboard() {
     loadActivities();
   }, [loadActivities]);
 
+  // Fetch chat sessions and messages on mount
+  useEffect(() => {
+    const fetchChatData = async () => {
+      try {
+        const sessions = await getAllChatSessions();
+        setChatSessions(sessions);
+        
+        // Fetch messages for all sessions
+        const allMessages: ChatMessage[] = [];
+        for (const session of sessions) {
+          try {
+            const res = await fetch(`/api/chat/sessions/${session.id}/messages`, { credentials: "include" });
+            if (res.ok) {
+              const sessionMessages = await res.json();
+              allMessages.push(...sessionMessages);
+            }
+          } catch (error) {
+            console.error("Error fetching messages for session", session.id, error);
+          }
+        }
+        setChatMessages(allMessages);
+      } catch (error) {
+        console.error("Error fetching chat sessions:", error);
+      }
+    };
+    
+    fetchChatData();
+  }, []);
+
   // Add these action handlers
   const handleStartTherapy = () => {
     router.push("/chat");
   };
 
-  const handleMoodSubmit = async (data: { moodScore: number }) => {
-    setIsSavingMood(true);
+  const handleActivityLogged = () => {
+    setShowActivityLogger(false);
+    loadActivities();
+  };
+
+  const handleMoodSubmit = async (data: { moodScore: number; note?: string }) => {
     try {
       const res = await fetch("/api/mood", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ score: data.moodScore }),
+        body: JSON.stringify({ score: data.moodScore, note: data.note }),
         credentials: "include",
       });
       if (res.ok) {
@@ -510,39 +542,9 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error("Error saving mood:", error);
-    } finally {
-      setIsSavingMood(false);
     }
   };
 
-  const handleAICheckIn = () => {
-    router.push("/chat");
-  };
-
-  // Add handler for game activities
-  const handleGamePlayed = useCallback(
-    async (gameName: string, description: string) => {
-      try {
-        const res = await fetch("/api/activities", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "game",
-            name: gameName,
-            description,
-            duration: 0,
-          }),
-          credentials: "include",
-        });
-        if (res.ok) loadActivities();
-        else logActivity({ userId: "default-user", type: "game", name: gameName, description, duration: 0 });
-      } catch (error) {
-        console.error("Error logging game activity:", error);
-        logActivity({ userId: "default-user", type: "game", name: gameName, description, duration: 0 });
-      }
-    },
-    [loadActivities]
-  );
 
   if (!mounted || sessionLoading || !isAuthenticated) {
     return (
@@ -574,11 +576,6 @@ export default function Dashboard() {
               })}
             </p>
           </motion.div>
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon">
-              <Bell className="h-5 w-5" />
-            </Button>
-          </div>
         </div>
 
         {/* Main Grid Layout */}
@@ -607,26 +604,27 @@ export default function Dashboard() {
                       variant="default"
                       className={cn(
                         "w-full justify-between items-center p-6 h-auto group/button",
-                        "bg-gradient-to-r from-primary/90 to-primary hover:from-primary hover:to-primary/90",
+                        "bg-white text-black hover:bg-white/90 dark:bg-black dark:text-white dark:hover:bg-black/90",
+                        "border border-border/40 dark:border-border/30",
                         "transition-all duration-200 group-hover:translate-y-[-2px]"
                       )}
                       onClick={handleStartTherapy}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                          <MessageSquare className="w-4 h-4 text-white" />
+                        <div className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center border border-black/10 dark:border-white/10">
+                          <MessageSquare className="w-4 h-4 text-current" />
                         </div>
                         <div className="text-left">
-                          <div className="font-semibold text-white">
+                          <div className="font-semibold text-current">
                             Start Therapy
                           </div>
-                          <div className="text-xs text-white/80">
+                          <div className="text-xs text-current/80">
                             Begin a new session
                           </div>
                         </div>
                       </div>
                       <div className="opacity-0 group-hover/button:opacity-100 transition-opacity">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                        <ArrowRight className="w-5 h-5 text-current" />
                       </div>
                     </Button>
 
@@ -654,19 +652,19 @@ export default function Dashboard() {
                       <Button
                         variant="outline"
                         className={cn(
-                          "flex flex-col h-[120px] px-4 py-3 group/ai hover:border-primary/50",
+                          "flex flex-col h-[120px] px-4 py-3 group/activity hover:border-primary/50",
                           "justify-center items-center text-center",
                           "transition-all duration-200 group-hover:translate-y-[-2px]"
                         )}
-                        onClick={handleAICheckIn}
+                        onClick={() => setShowActivityLogger(true)}
                       >
-                        <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mb-2">
-                          <BrainCircuit className="w-5 h-5 text-blue-500" />
+                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center mb-2">
+                          <Activity className="w-5 h-5 text-green-500" />
                         </div>
                         <div>
-                          <div className="font-medium text-sm">Check-in</div>
+                          <div className="font-medium text-sm">Log Activity</div>
                           <div className="text-xs text-muted-foreground mt-0.5">
-                            Quick wellness check
+                            Track your progress
                           </div>
                         </div>
                       </Button>
@@ -724,53 +722,15 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Insights Card */}
-            <Card className="border-primary/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BrainCircuit className="w-5 h-5 text-primary" />
-                  Insights
-                </CardTitle>
-                <CardDescription>
-                  Personalized recommendations based on your activity patterns
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {insights.length > 0 ? (
-                    insights.map((insight, index) => (
-                      <div
-                        key={index}
-                        className={cn(
-                          "p-4 rounded-lg space-y-2 transition-all hover:scale-[1.02]",
-                          insight.priority === "high"
-                            ? "bg-primary/10"
-                            : insight.priority === "medium"
-                            ? "bg-primary/5"
-                            : "bg-muted"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <insight.icon className="w-5 h-5 text-primary" />
-                          <p className="font-medium">{insight.title}</p>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {insight.description}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center text-muted-foreground py-8">
-                      <Activity className="w-8 h-8 mx-auto mb-3 opacity-50" />
-                      <p>
-                        Complete more activities to receive personalized
-                        insights
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            {/* Chat AI Insights Card */}
+            <ChatAIInsights 
+              sessions={chatSessions} 
+              messages={chatMessages}
+              onActionClick={(insight: ChatAIInsight) => {
+                console.log("Chat AI Insight clicked:", insight);
+                // Handle AI insight actions here
+              }}
+            />
 
             {/* Chat Insights Card */}
             <Card className="border-primary/10">
@@ -806,31 +766,16 @@ export default function Dashboard() {
           </div>
 
           {/* Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left side - Spans 2 columns */}
-            <div className="lg:col-span-3 space-y-6">
-              {/* Anxiety Games - Now directly below Fitbit */}
-              <AnxietyGames onGamePlayed={handleGamePlayed} />
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Mood Tracker */}
+            <MoodTracker onMoodUpdate={fetchDailyStats} />
+            
+            {/* Activity Logger */}
+            <ActivityLogger onActivityLogged={handleActivityLogged} />
           </div>
         </div>
       </Container>
 
-      {/* Mood tracking modal */}
-      <Dialog open={showMoodModal} onOpenChange={setShowMoodModal}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>How are you feeling?</DialogTitle>
-            <DialogDescription>
-              Move the slider to track your current mood
-            </DialogDescription>
-          </DialogHeader>
-          <MoodForm
-              onSubmit={handleMoodSubmit}
-              onSuccess={() => setShowMoodModal(false)}
-            />
-        </DialogContent>
-      </Dialog>
 
       {/* AI check-in chat */}
       {showCheckInChat && (
@@ -853,11 +798,52 @@ export default function Dashboard() {
         </div>
       )}
 
-      <ActivityLogger
-        open={showActivityLogger}
-        onOpenChange={setShowActivityLogger}
-        onActivityLogged={loadActivities}
-      />
+      {/* Mood tracking modal */}
+      {showMoodModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-background border rounded-lg shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold">Track Your Mood</h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowMoodModal(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <MoodForm
+                onSubmit={handleMoodSubmit}
+                onSuccess={() => setShowMoodModal(false)}
+                onCancel={() => setShowMoodModal(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Activity logger modal */}
+      {showActivityLogger && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-background border rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold">Log Activity</h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowActivityLogger(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <ActivityLogger onActivityLogged={handleActivityLogged} />
+            </div>
+          </div>
+        </div>
+      )}
+
       </div>
 
       <footer className="mt-auto">

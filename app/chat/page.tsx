@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Send, Plus, MessageSquare, Loader2, Bot, User } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Role = "user" | "assistant";
 interface ChatSession { id: string; title?: string; created_at?: string; updated_at?: string }
@@ -21,51 +22,129 @@ function SessionList({
   onNew: () => void;
 }) {
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="flex items-center justify-between flex-row">
-        <CardTitle className="text-base">Your Chats</CardTitle>
-        <Button size="sm" onClick={onNew}>New</Button>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-auto p-0">
+    <div className="h-full bg-background border-r border-border">
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            <h2 className="font-semibold text-lg">Conversations</h2>
+          </div>
+          <Button 
+            size="sm" 
+            onClick={onNew}
+            className="gap-2 bg-primary hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4" />
+            New Chat
+          </Button>
+        </div>
+      </div>
+      <div className="flex-1 overflow-auto">
         {sessions.length === 0 ? (
-          <div className="p-4 text-sm text-muted-foreground">No chats yet.</div>
+          <div className="p-8 text-center">
+            <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground">No conversations yet</p>
+            <p className="text-xs text-muted-foreground mt-1">Start your first chat below</p>
+          </div>
         ) : (
-          <ul className="divide-y">
+          <div className="divide-y divide-border">
             {sessions.map((s) => (
-              <li key={s.id}>
-                <button
-                  className={`w-full text-left px-4 py-3 hover:bg-muted ${selectedId === s.id ? "bg-muted" : ""}`}
-                  onClick={() => onSelect(s.id)}
-                >
-                  <div className="text-sm font-medium truncate">{s.title || "Chat"}</div>
-                  {s.updated_at && (
-                    <div className="text-xs text-muted-foreground">{new Date(s.updated_at).toLocaleString()}</div>
-                  )}
-                </button>
-              </li>
+              <button
+                key={s.id}
+                className={cn(
+                  "w-full text-left p-4 hover:bg-muted/50 transition-colors",
+                  selectedId === s.id && "bg-muted border-l-2 border-primary"
+                )}
+                onClick={() => onSelect(s.id)}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{s.title || "New Conversation"}</div>
+                    {s.updated_at && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {new Date(s.updated_at).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </button>
             ))}
-          </ul>
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
 function MessageList({ messages }: { messages: ChatMessage[] }) {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   return (
-    <div className="h-[60vh] overflow-auto p-4">
+    <div className="flex-1 overflow-auto p-6 space-y-4">
       {messages.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Say hi to start a conversation.</p>
+        <div className="flex flex-col items-center justify-center h-full text-center">
+          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <Bot className="h-8 w-8 text-primary" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">Welcome to Zenly Chat</h3>
+          <p className="text-sm text-muted-foreground max-w-md">
+            I&apos;m here to support your mental wellness journey. How are you feeling today?
+          </p>
+        </div>
       ) : (
-        <ul className="space-y-3">
+        <>
           {messages.map((m) => (
-            <li key={m.id} className={m.role === "user" ? "text-right" : "text-left"}>
-              <div className={`inline-block px-3 py-2 rounded-md text-sm ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                {m.content}
+            <div
+              key={m.id}
+              className={cn(
+                "flex gap-3 max-w-4xl",
+                m.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
+              )}
+            >
+              <div className="flex-shrink-0">
+                <div className={cn(
+                  "h-8 w-8 rounded-full flex items-center justify-center",
+                  m.role === "user" 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-muted border border-border"
+                )}>
+                  {m.role === "user" ? (
+                    <User className="h-4 w-4" />
+                  ) : (
+                    <Bot className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </div>
               </div>
-            </li>
+              <div className={cn(
+                "flex-1 px-4 py-3 rounded-2xl",
+                m.role === "user" 
+                  ? "bg-primary text-primary-foreground" 
+                  : "bg-muted border border-border"
+              )}>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.content}</p>
+                <div className="text-xs opacity-70 mt-1">
+                  {new Date(m.created_at).toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </div>
+              </div>
+            </div>
           ))}
-        </ul>
+          <div ref={messagesEndRef} />
+        </>
       )}
     </div>
   );
@@ -171,38 +250,94 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4">
+    <div className="h-[calc(100vh-4rem)] bg-background flex">
+      {/* Sidebar */}
+      <div className="w-80 h-full flex-shrink-0 hidden md:flex">
         <SessionList
           sessions={sessions}
           selectedId={sessionId}
           onSelect={setSessionId}
           onNew={onNewSession}
         />
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Zenly Chat</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <div className="text-sm text-red-600 border border-red-300 bg-red-50 p-2 rounded mb-3">{error}</div>
-            )}
-            <MessageList messages={messages} />
-            <div className="flex gap-2 mt-3">
-              <Input
-                placeholder="Type your message…"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && canSend) onSend();
-                }}
-              />
-              <Button onClick={onSend} disabled={!canSend}>
-                {loading ? "Thinking…" : "Send"}
+      </div>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col h-full">
+        {/* Header */}
+        <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+                <Bot className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="font-semibold text-lg">Zenly Assistant</h1>
+                <p className="text-xs text-muted-foreground">Your mental wellness companion</p>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onNewSession}
+              className="md:hidden gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              New
+            </Button>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <MessageList messages={messages} />
+
+        {/* Input Area */}
+        <div className="border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          {error && (
+            <div className="mx-4 mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-sm text-destructive">{error}</p>
+            </div>
+          )}
+          <div className="p-4">
+            <div className="flex gap-3 max-w-4xl mx-auto">
+              <div className="flex-1 relative">
+                <Input
+                  placeholder="Share what's on your mind..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey && canSend) {
+                      e.preventDefault();
+                      onSend();
+                    }
+                  }}
+                  className="resize-none h-12 pr-12 bg-background border-border focus:border-primary"
+                  disabled={!sessionId || loading}
+                />
+              </div>
+              <Button 
+                onClick={onSend} 
+                disabled={!canSend}
+                size="lg"
+                className="gap-2 px-6 bg-primary hover:bg-primary/90"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Thinking...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Send
+                  </>
+                )}
               </Button>
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Press Enter to send, Shift+Enter for new line
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

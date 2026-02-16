@@ -3,144 +3,149 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { useSession } from "@/lib/contexts/session-context";
-import { useRouter } from "next/navigation";
+import { Frown, Meh, Smile, Laugh } from "lucide-react";
 
 interface MoodFormProps {
+  onSubmit: (data: { moodScore: number; note?: string }) => void;
   onSuccess?: () => void;
-  onSubmit?: (data: { moodScore: number }) => void | Promise<void>;
+  onCancel?: () => void;
 }
 
-export function MoodForm({ onSuccess, onSubmit }: MoodFormProps) {
-  const [moodScore, setMoodScore] = useState(50);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const { isAuthenticated, loading } = useSession();
-  const router = useRouter();
+const moodEmojis = [
+  { value: 20, icon: Frown, label: "Very Bad", color: "text-red-500" },
+  { value: 40, icon: Meh, label: "Bad", color: "text-orange-500" },
+  { value: 60, icon: Smile, label: "Good", color: "text-yellow-500" },
+  { value: 80, icon: Laugh, label: "Great", color: "text-green-500" },
+];
 
-  const emotions = [
-    { value: 0, label: "😔", description: "Very Low" },
-    { value: 25, label: "😕", description: "Low" },
-    { value: 50, label: "😊", description: "Neutral" },
-    { value: 75, label: "😃", description: "Good" },
-    { value: 100, label: "🤗", description: "Great" },
-  ];
+export default function MoodForm({ onSubmit, onSuccess, onCancel }: MoodFormProps) {
+  const [moodScore, setMoodScore] = useState([50]);
+  const [note, setNote] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const currentEmotion =
-    emotions.find((em) => Math.abs(moodScore - em.value) < 15) || emotions[2];
+  const getCurrentMoodEmoji = () => {
+    const score = moodScore[0];
+    if (score <= 30) return moodEmojis[0];
+    if (score <= 50) return moodEmojis[1];
+    if (score <= 70) return moodEmojis[2];
+    return moodEmojis[3];
+  };
 
-  const handleSubmit = async () => {
-    if (!isAuthenticated && !onSubmit) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to track your mood",
-        variant: "destructive",
-      });
-      router.push("/login");
-      return;
-    }
+  const currentMood = getCurrentMoodEmoji();
+  const CurrentIcon = currentMood.icon;
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     try {
-      setIsLoading(true);
-      if (onSubmit) {
-        await onSubmit({ moodScore });
-        toast({
-          title: "Mood tracked",
-          description: "Your mood has been recorded.",
-        });
-        onSuccess?.();
-        return;
-      }
-
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/mood", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify({ score: moodScore }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || "Failed to track mood");
-      }
-
-      toast({
-        title: "Mood tracked successfully!",
-        description: "Your mood has been recorded.",
+      await onSubmit({ 
+        moodScore: moodScore[0], 
+        note: note.trim() || undefined 
       });
       onSuccess?.();
     } catch (error) {
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to track mood",
-        variant: "destructive",
-      });
+      console.error("Error submitting mood:", error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6 py-4">
-      {/* Emotion display */}
-      <div className="text-center space-y-2">
-        <div className="text-4xl">{currentEmotion.label}</div>
-        <div className="text-sm text-muted-foreground">
-          {currentEmotion.description}
+    <div className="space-y-4">
+      {/* Mood Emoji Display */}
+      <div className="flex justify-center">
+        <div className={`text-5xl ${currentMood.color} transition-all duration-300`}>
+          <CurrentIcon />
         </div>
       </div>
 
-      {/* Emotion slider */}
-      <div className="space-y-4">
-        <div className="flex justify-between px-2">
-          {emotions.map((em) => (
-            <div
-              key={em.value}
-              className={`cursor-pointer transition-opacity ${
-                Math.abs(moodScore - em.value) < 15
-                  ? "opacity-100"
-                  : "opacity-50"
-              }`}
-              onClick={() => setMoodScore(em.value)}
+        {/* Mood Labels */}
+        <div className="flex justify-between text-xs text-muted-foreground px-2">
+          <span>Very Bad</span>
+          <span>Neutral</span>
+          <span>Great</span>
+        </div>
+
+        {/* Mood Slider */}
+        <div className="space-y-1">
+          <Slider
+            value={moodScore}
+            onValueChange={setMoodScore}
+            max={100}
+            min={0}
+            step={1}
+            className="w-full"
+            disabled={isSubmitting}
+          />
+          <div className="text-center">
+            <span className="text-xl font-bold">{moodScore[0]}</span>
+            <span className="text-sm text-muted-foreground ml-1">/100</span>
+          </div>
+        </div>
+
+        {/* Quick Mood Buttons */}
+        <div className="grid grid-cols-4 gap-1">
+          {moodEmojis.map((mood) => {
+            const Icon = mood.icon;
+            return (
+              <Button
+                key={mood.value}
+                variant="outline"
+                size="sm"
+                onClick={() => setMoodScore([mood.value])}
+                className={`flex flex-col gap-1 h-16 py-1 ${
+                  Math.abs(moodScore[0] - mood.value) < 10 ? 'border-primary' : ''
+                }`}
+                disabled={isSubmitting}
+              >
+                <Icon className={`h-3 w-3 ${mood.color}`} />
+                <span className="text-xs">{mood.label}</span>
+              </Button>
+            );
+          })}
+        </div>
+
+        {/* Optional Note */}
+        <div className="space-y-1">
+          <label htmlFor="mood-note" className="text-sm font-medium">
+            What&apos;s on your mind? (optional)
+          </label>
+          <textarea
+            id="mood-note"
+            value={note}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNote(e.target.value)}
+            placeholder="Describe how you're feeling..."
+            className="w-full p-2 border rounded-md resize-none h-16 text-sm"
+            disabled={isSubmitting}
+            maxLength={200}
+          />
+          <div className="text-xs text-muted-foreground text-right">
+            {note.length}/200
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 pt-1">
+          {onCancel && (
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              disabled={isSubmitting}
+              className="flex-1"
             >
-              <div className="text-2xl">{em.label}</div>
-            </div>
-          ))}
+              Cancel
+            </Button>
+          )}
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="flex-1"
+          >
+            {isSubmitting ? "Saving..." : "Save Mood"}
+          </Button>
         </div>
-
-        <Slider
-          value={[moodScore]}
-          onValueChange={(value) => setMoodScore(value[0])}
-          min={0}
-          max={100}
-          step={1}
-          className="py-4"
-        />
-      </div>
-
-      {/* Submit button */}
-      <Button
-        className="w-full"
-        onClick={handleSubmit}
-        disabled={isLoading || loading}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Saving...
-          </>
-        ) : loading ? (
-          "Loading..."
-        ) : (
-          "Save Mood"
-        )}
-      </Button>
     </div>
   );
 }
