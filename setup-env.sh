@@ -10,8 +10,7 @@ if [ ! -f .env.local ]; then
 # Database Connection (Optional for local dev)
 # DATABASE_URL=postgresql://USER:PASSWORD@HOST/neondb?sslmode=require
 
-# App Configuration
-APP_URL=http://localhost:3000
+# Session Security (Required for authentication)
 SESSION_SECRET=$(openssl rand -base64 32 2>/dev/null || echo "fallback-secret-key-$(date +%s)")
 EOF
     echo "✅ .env.local created successfully!"

@@ -17,8 +17,7 @@ Copy this content to your `.env.local` file:
 # Database Connection (Optional for local dev)
 # DATABASE_URL=postgresql://USER:PASSWORD@HOST/neondb?sslmode=require
 
-# App Configuration
-APP_URL=http://localhost:3000
+# Session Security (Required for authentication)
 SESSION_SECRET=your-random-secret-key-here
 ```
 
@@ -69,12 +68,11 @@ Visit: http://localhost:3000
 
 ## Troubleshooting
 
-### ❌ "NextAuth Error"
-This is misleading - the app uses custom auth, not NextAuth.js. The error usually means:
+### ❌ "APP_URL Error"
+This error occurs because APP_URL is not used by this application. The custom auth system only needs:
 
-1. **Missing .env.local file** - Create it with the content above
-2. **Invalid SESSION_SECRET** - Generate a new secret key
-3. **Wrong APP_URL** - Should be `http://localhost:3000` for local dev
+1. **SESSION_SECRET** - Generate a new secret key
+2. **DATABASE_URL** - Optional for local dev, required for production
 
 ### ❌ "Database Connection Failed"
 - For local dev: This is normal - it will use in-memory storage
@@ -82,20 +80,18 @@ This is misleading - the app uses custom auth, not NextAuth.js. The error usuall
 
 ### ❌ "Session Issues"
 - Check that SESSION_SECRET is set
-- Ensure APP_URL matches your development URL
+- The custom auth system doesn't use APP_URL
 
 ## Production Deployment
 
 When deploying to Netlify/Vercel:
 
 1. **Add DATABASE_URL** environment variable
-2. **Set APP_URL** to your domain
-3. **Set SESSION_SECRET** to a secure random string
+2. **Set SESSION_SECRET** to a secure random string
 
 ### Environment Variables for Production:
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST/neondb?sslmode=require
-APP_URL=https://your-domain.vercel.app
 SESSION_SECRET=your-production-secret-key
 ```
 

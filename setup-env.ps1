@@ -12,8 +12,7 @@ if (-not (Test-Path ".env.local")) {
 # Database Connection (Optional for local dev)
 # DATABASE_URL=postgresql://USER:PASSWORD@HOST/neondb?sslmode=require
 
-# App Configuration
-APP_URL=http://localhost:3000
+# Session Security (Required for authentication)
 SESSION_SECRET=$secret
 "@
     
