@@ -13,8 +13,8 @@ if (-not (Test-Path ".env.local")) {
 # DATABASE_URL=postgresql://USER:PASSWORD@HOST/neondb?sslmode=require
 
 # App Configuration
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=$secret
+APP_URL=http://localhost:3000
+SESSION_SECRET=$secret
 "@
     
     $envContent | Out-File -FilePath ".env.local" -Encoding UTF8

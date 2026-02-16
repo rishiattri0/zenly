@@ -11,8 +11,8 @@ if [ ! -f .env.local ]; then
 # DATABASE_URL=postgresql://USER:PASSWORD@HOST/neondb?sslmode=require
 
 # App Configuration
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=$(openssl rand -base64 32 2>/dev/null || echo "fallback-secret-key-$(date +%s)")
+APP_URL=http://localhost:3000
+SESSION_SECRET=$(openssl rand -base64 32 2>/dev/null || echo "fallback-secret-key-$(date +%s)")
 EOF
     echo "✅ .env.local created successfully!"
 else
