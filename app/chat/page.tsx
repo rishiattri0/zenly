@@ -49,15 +49,6 @@ function SessionList({
               <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               <h2 className="font-semibold text-sm sm:text-lg truncate">Conversations</h2>
             </div>
-            <Button 
-              variant="outline"
-              size="sm" 
-              onClick={onNew}
-              className="ml-auto h-8 px-2 sm:px-3 rounded-full gap-1 flex-shrink-0 hover:bg-muted/50 transition-colors"
-            >
-              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden md:inline">New Chat</span>
-            </Button>
           </div>
         </div>
       </div>
