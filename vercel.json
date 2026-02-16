@@ -3,12 +3,10 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "env": {
-    "DATABASE_URL": "@database_url"
-  },
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
     }
   }
 }
+
