@@ -70,3 +70,32 @@ export async function updateChatSessionUpdatedAt(sessionId: string): Promise<voi
     UPDATE public.zenly_chat_sessions SET updated_at = now() WHERE id = ${sessionId}
   `;
 }
+
+export async function updateChatSessionTitleIfDefault(
+  sessionId: string,
+  title: string,
+  defaultTitle = "Chat"
+): Promise<boolean> {
+  if (!sql) return false;
+  const nextTitle = title.trim();
+  if (!nextTitle) return false;
+  const rows = (await sql`
+    UPDATE public.zenly_chat_sessions
+    SET title = ${nextTitle}
+    WHERE id = ${sessionId} AND title = ${defaultTitle}
+    RETURNING id
+  `) as unknown as Array<{ id: string }>;
+  return Array.isArray(rows) && rows.length > 0;
+}
+
+export async function deleteChatSession(sessionId: string): Promise<boolean> {
+  if (!sql) return false;
+  await sql`
+    DELETE FROM public.zenly_chat_messages WHERE chat_session_id = ${sessionId}
+  `;
+  const rows = (await sql`
+    DELETE FROM public.zenly_chat_sessions WHERE id = ${sessionId}
+    RETURNING id
+  `) as unknown as Array<{ id: string }>;
+  return Array.isArray(rows) && rows.length > 0;
+}

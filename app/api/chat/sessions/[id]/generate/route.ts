@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-session";
-import { getChatMessages, addChatMessage, updateChatSessionUpdatedAt } from "@/lib/db/chat";
+import { getChatMessages, addChatMessage, updateChatSessionUpdatedAt, updateChatSessionTitleIfDefault } from "@/lib/db/chat";
 import { sql } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
@@ -37,6 +37,17 @@ export async function POST(
     const userMsg = await addChatMessage(sessionId, "user", content);
     if (!userMsg) {
       return NextResponse.json({ error: "Failed to add user message" }, { status: 500 });
+    }
+
+    const titleCandidate = content
+      .replace(/\s+/g, " ")
+      .trim()
+      .split(" ")
+      .slice(0, 6)
+      .join(" ")
+      .slice(0, 48);
+    if (titleCandidate) {
+      await updateChatSessionTitleIfDefault(sessionId, titleCandidate, "Chat");
     }
 
     const model = process.env.GROQ_MODEL || "llama-3.1-8b-instant";

@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Plus, MessageSquare, Loader2, Bot, User, X, Menu } from "lucide-react";
+import { Send, Plus, MessageSquare, Loader2, Bot, User, X, Menu, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
 
 type Role = "user" | "assistant";
 interface ChatSession {
@@ -25,30 +27,38 @@ function SessionList({
   selectedId,
   onSelect,
   onNew,
+  onDelete,
   isMobile = false,
 }: {
   sessions: ChatSession[];
   selectedId: string | null;
   onSelect: (id: string) => void;
   onNew: () => void;
+  onDelete: (id: string) => void;
   isMobile?: boolean;
 }) {
   return (
     <div className="h-full bg-background border-r border-border flex flex-col">
       <div className="p-3 sm:p-4 border-b border-border flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-            <h2 className="font-semibold text-sm sm:text-lg">Conversations</h2>
+        <div className="flex flex-col gap-3 pr-10 md:pr-0">
+          <Link href="/dashboard" className="w-fit hover:opacity-80 transition-opacity">
+            <p className="font-extrabold text-xl sm:text-2xl md:text-4xl leading-none">ZENLY</p>
+          </Link>
+          <div className="flex items-center w-full gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <h2 className="font-semibold text-sm sm:text-lg truncate">Conversations</h2>
+            </div>
+            <Button 
+              variant="outline"
+              size="sm" 
+              onClick={onNew}
+              className="ml-auto h-8 px-2 sm:px-3 rounded-full gap-1 flex-shrink-0 hover:bg-muted/50 transition-colors"
+            >
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden md:inline">New Chat</span>
+            </Button>
           </div>
-          <Button 
-            size="sm" 
-            onClick={onNew}
-            className="gap-1 sm:gap-2 bg-primary hover:bg-primary/90 h-8 sm:h-auto px-2 sm:px-3"
-          >
-            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">New Chat</span>
-          </Button>
         </div>
       </div>
       <div className="flex-1 overflow-auto">
@@ -61,13 +71,21 @@ function SessionList({
         ) : (
           <div className="divide-y divide-border">
             {sessions.map((s) => (
-              <button
+              <div
                 key={s.id}
+                role="button"
+                tabIndex={0}
                 className={cn(
                   "w-full text-left p-3 sm:p-4 hover:bg-muted/50 transition-colors",
                   selectedId === s.id && "bg-muted border-l-2 border-primary"
                 )}
                 onClick={() => onSelect(s.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelect(s.id);
+                  }
+                }}
               >
                 <div className="flex items-start gap-2 sm:gap-3">
                   <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -85,8 +103,21 @@ function SessionList({
                       </div>
                     )}
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Delete chat"
+                    className="h-8 w-8 flex-shrink-0"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onDelete(s.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}
@@ -170,6 +201,33 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  async function onDeleteSession(id: string) {
+    setError(null);
+    try {
+      const ok = window.confirm("Delete this chat?");
+      if (!ok) return;
+
+      const res = await fetch(`/api/chat/sessions/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete chat");
+
+      let nextSelected: string | null = null;
+      setSessions((prev) => {
+        const remaining = prev.filter((s) => s.id !== id);
+        if (id === sessionId) nextSelected = remaining[0]?.id ?? null;
+        return remaining;
+      });
+      setMessages((prev) => (id === sessionId ? [] : prev));
+      setSessionId((prev) => (prev === id ? nextSelected : prev));
+      setSidebarOpen(false);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message || "Failed to delete chat");
+    }
+  }
+
   // Load sessions on mount
   useEffect(() => {
     let mounted = true;
@@ -227,6 +285,19 @@ export default function ChatPage() {
     const tempId = `tmp-${Date.now()}`;
     setMessages((prev) => [...prev, { id: tempId, role: "user", content, created_at: new Date().toISOString() }]);
 
+    const titleCandidate = content
+      .replace(/\s+/g, " ")
+      .trim()
+      .split(" ")
+      .slice(0, 6)
+      .join(" ")
+      .slice(0, 48);
+    if (titleCandidate) {
+      setSessions((prev) =>
+        prev.map((s) => (s.id === sessionId && (!s.title || s.title === "Chat") ? { ...s, title: titleCandidate } : s))
+      );
+    }
+
     try {
       const res = await fetch(`/api/chat/sessions/${sessionId}/generate`, {
         method: "POST",
@@ -262,20 +333,30 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-5rem)] sm:h-[calc(100vh-6rem)] bg-background flex">
-      {/* Mobile Sidebar Overlay */}
+    <div className="h-screen bg-background flex overflow-hidden">
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      
+
       {/* Mobile Sidebar */}
       <div className={cn(
         "fixed inset-y-0 left-0 z-50 w-72 sm:w-80 bg-background border-r border-border transform transition-transform duration-300 ease-in-out md:hidden",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Close sidebar"
+          className="absolute right-2 top-2 z-10 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        >
+          <X className="h-4 w-4" />
+        </Button>
         <SessionList
           sessions={sessions}
           selectedId={sessionId}
@@ -287,6 +368,7 @@ export default function ChatPage() {
             onNewSession();
             setSidebarOpen(false);
           }}
+          onDelete={onDeleteSession}
           isMobile={true}
         />
       </div>
@@ -298,6 +380,7 @@ export default function ChatPage() {
           selectedId={sessionId}
           onSelect={setSessionId}
           onNew={onNewSession}
+          onDelete={onDeleteSession}
         />
       </div>
 
@@ -310,7 +393,7 @@ export default function ChatPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSidebarOpen(true)}
+                onClick={() => setSidebarOpen((v) => !v)}
                 className="md:hidden p-2"
               >
                 <Menu className="h-4 w-4" />
@@ -323,15 +406,18 @@ export default function ChatPage() {
                 <p className="text-xs text-muted-foreground hidden sm:block">Your mental wellness companion</p>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onNewSession}
-              className="gap-1 sm:gap-2 h-8 sm:h-auto px-2 sm:px-3"
-            >
-              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">New</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <AnimatedThemeToggler />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onNewSession}
+                className="gap-1 sm:gap-2 h-8 sm:h-auto px-2 sm:px-3"
+              >
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">New</span>
+              </Button>
+            </div>
           </div>
         </div>
 

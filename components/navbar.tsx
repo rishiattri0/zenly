@@ -27,6 +27,9 @@ export default function Navbar() {
   const router = useRouter();
   const { isAuthenticated, loading, signOut } = useSession();
 
+  const hideNavbar = pathname?.startsWith("/chat");
+  if (hideNavbar) return null;
+
   const isLanding = pathname === "/";
   const showNavLinks = isLanding;
 
