@@ -7,8 +7,18 @@ import { Send, Plus, MessageSquare, Loader2, Bot, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Role = "user" | "assistant";
-interface ChatSession { id: string; title?: string; created_at?: string; updated_at?: string }
-interface ChatMessage { id: string; role: Role; content: string; created_at: string }
+interface ChatSession {
+  id: string;
+  title?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+interface ChatMessage {
+  id: string;
+  role: Role;
+  content: string;
+  created_at: string;
+}
 
 function SessionList({
   sessions,
