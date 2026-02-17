@@ -566,7 +566,13 @@ export default function Dashboard() {
             className="space-y-2"
           >
             <h1 className="text-3xl font-bold text-foreground">
-              Welcome back, {user?.name || "there"}
+              {(() => {
+                const hour = currentTime.getHours();
+                if (hour < 12) return "Good morning";
+                if (hour < 17) return "Good afternoon";
+                if (hour < 21) return "Good evening";
+                return "Good night";
+              })()}, {user?.name || "there"}
             </h1>
             <p className="text-muted-foreground">
               {currentTime.toLocaleDateString("en-US", {
