@@ -1,5 +1,5 @@
 import HeroSection from "@/components/hero-section";
-import TextReveal from "@/components/magicui/text-reveal";
+import { TextReveal } from "@/components/magicui/text-reveal";
 import Features from "@/components/features-1";
 import StatsSection from "@/components/stats";
 import WallOfLoveSection from "@/components/testimonials";

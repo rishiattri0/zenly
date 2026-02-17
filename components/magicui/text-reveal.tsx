@@ -1,56 +1,70 @@
 "use client";
 
-import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
-import { useRef } from "react";
+import React, { ComponentPropsWithoutRef, FC, ReactNode, useRef, useEffect, useState } from "react";
+import { motion, type MotionValue, useScroll } from "framer-motion";
 
-function RevealWord({
-  word,
-  index,
-  count,
-  progress,
-}: {
-  word: string;
-  index: number;
-  count: number;
-  progress: MotionValue<number>;
-}) {
-  const start = index / count;
-  const end = start + 1 / count;
-  const opacity = useTransform(progress, [start, end], [0, 1]);
-  const y = useTransform(progress, [start, end], [20, 0]);
-  return (
-    <span className="relative mx-2 inline-block">
-      <span className="absolute opacity-20">{word}</span>
-      <motion.span 
-        style={{ opacity, y }} 
-        className="text-black dark:text-white relative"
-        transition={{ duration: 0.3 }}
-      >
-        {word}
-      </motion.span>
-    </span>
-  );
+import { cn } from "@/lib/utils";
+
+export interface TextRevealProps extends ComponentPropsWithoutRef<"div"> {
+  children: string;
 }
 
-export default function TextReveal({ children }: { children: string }) {
-  const sectionRef = useRef<HTMLDivElement>(null);
-
+export const TextReveal: FC<TextRevealProps> = ({ children, className }) => {
+  const targetRef = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start 0.8", "end 0.2"],
+    target: targetRef,
+    offset: ["start start", "end end"],
   });
+
+  if (typeof children !== "string") {
+    throw new Error("TextReveal: children must be a string");
+  }
 
   const words = children.split(" ");
 
   return (
-    <section ref={sectionRef} className="relative py-32 overflow-hidden">
-      <div className="max-w-5xl mx-auto px-8">
-        <p className="flex flex-wrap text-6xl md:text-7xl font-bold leading-tight text-black/20 dark:text-black/20">
-          {words.map((w, i) => (
-            <RevealWord key={`${w}-${i}`} word={w} index={i} count={words.length} progress={scrollYProgress} />
-          ))}
-        </p>
+    <div ref={targetRef} className={cn("relative z-0 h-[180vh]", className)}>
+      <div className="sticky top-0 mx-auto flex h-screen max-w-4xl items-center bg-transparent px-4">
+        <span className="flex flex-wrap p-5 text-3xl font-bold md:p-8 md:text-4xl lg:p-10 lg:text-5xl xl:text-6xl">
+          {words.map((word, i) => {
+            const start = i / words.length;
+            const end = start + 1 / words.length;
+            return <Word key={i} scrollYProgress={scrollYProgress} range={[start, end]}>{word}</Word>;
+          })}
+        </span>
       </div>
-    </section>
+    </div>
   );
+};
+
+interface WordProps {
+  children: ReactNode;
+  scrollYProgress: MotionValue<number>;
+  range: [number, number];
 }
+
+const Word: FC<WordProps> = ({ children, scrollYProgress, range }) => {
+  const [opacity, setOpacity] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = scrollYProgress.on("change", (v) => {
+      const [start, end] = range;
+      let o = 0;
+      if (v >= start && v <= end) {
+        o = (v - start) / (end - start);
+      } else if (v > end) {
+        o = 1;
+      }
+      setOpacity(o);
+    });
+    return () => unsubscribe();
+  }, [scrollYProgress, range]);
+
+  return (
+    <span className="relative mx-1 lg:mx-1.5">
+      <motion.span style={{ opacity }} className={"text-black dark:text-white"}>
+        {children}
+      </motion.span>
+    </span>
+  );
+};

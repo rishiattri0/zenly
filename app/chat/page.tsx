@@ -131,7 +131,15 @@ function MessageList({ messages }: { messages: ChatMessage[] }) {
           <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
             <Bot className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
           </div>
-          <h3 className="text-base sm:text-lg font-semibold mb-2">Welcome to Zenly Chat</h3>
+          <h3 className="text-base sm:text-lg font-semibold mb-2">
+            {(() => {
+              const hour = new Date().getHours();
+              if (hour < 12) return "Good morning";
+              if (hour < 17) return "Good afternoon";
+              if (hour < 21) return "Good evening";
+              return "Good night";
+            })()} to Zenly Chat
+          </h3>
           <p className="text-sm text-muted-foreground max-w-sm sm:max-w-md">
             I&apos;m here to support your mental wellness journey. How are you feeling today?
           </p>
