@@ -1,16 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, EffectCoverflow } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/autoplay";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
-import "swiper/css/effect-coverflow";
 import Link from "next/link";
 import { ArrowRight, Rocket, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Ripple } from "@/components/magicui/ripple";
+import HeroCarousel from "@/components/hero-carousel";
 
 export default function HeroSection() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -114,39 +108,7 @@ export default function HeroSection() {
             </div>
 
             {/* Carousel */}
-            <div className="relative mx-auto mt-8 max-w-lg sm:mt-12">
-              <Swiper
-                slidesPerView={1}
-                pagination={{ clickable: true }}
-                loop
-                autoplay={{ delay: 5000 }}
-                modules={[Autoplay, EffectCoverflow]}
-              >
-                <SwiperSlide className="px-2 cursor-pointer">
-                  <div className="bg-background rounded-lg h-44 max-w-lg border flex items-center justify-center p-6 text-center">
-                    <p className="text-xl font-semibold">
-                      Your 24/7 Mental Wellness Companion
-                    </p>
-                  </div>
-                </SwiperSlide>
-
-                <SwiperSlide className="px-2 cursor-pointer">
-                  <div className="bg-background rounded-lg h-44 max-w-lg border flex items-center justify-center p-6 text-center">
-                    <p className="text-xl font-semibold">
-                      Support When You Need It Most
-                    </p>
-                  </div>
-                </SwiperSlide>
-
-                <SwiperSlide className="px-2 cursor-pointer">
-                  <div className="bg-background rounded-lg h-44 max-w-lg border flex items-center justify-center p-6 text-center ">
-                    <p className="text-xl font-semibold">
-                      Small Steps Toward a Healthier Mind
-                    </p>
-                  </div>
-                </SwiperSlide>
-              </Swiper>
-            </div>
+            <HeroCarousel />
           </div>
         </div>
       </section>

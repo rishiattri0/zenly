@@ -17,7 +17,7 @@ import { useSession } from "@/lib/contexts/session-context";
 const menuItems = [
   { name: "Features", href: "#features" },
   { name: "About", href: "#about" },
-  { name: "Reviews", href: "#Reviews" },
+  { name: "Testimonials", href: "#testimonials" },
   { name: "Contact", href: "#contact" },
 ];
 
@@ -71,12 +71,18 @@ export default function Navbar() {
                   <ul className="space-y-6 text-base lg:flex lg:gap-8 lg:space-y-0 lg:text-sm">
                     {menuItems.map((item, index) => (
                       <li key={index}>
-                        <Link
-                          href={item.href}
+                        <button
+                          onClick={() => {
+                            const element = document.querySelector(item.href);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth' });
+                            }
+                            setMenuState(false);
+                          }}
                           className="text-muted-foreground hover:text-accent-foreground block duration-150"
                         >
                           <span>{item.name}</span>
-                        </Link>
+                        </button>
                       </li>
                     ))}
                   </ul>

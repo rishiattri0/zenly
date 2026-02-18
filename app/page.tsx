@@ -6,6 +6,8 @@ import WallOfLoveSection from "@/components/testimonials";
 import FooterSection from "@/components/footer";
 import ContentSection from "@/components/content-5";
 import CallToAction from "@/components/call-to-action";
+import Stats3 from "@/components/stats-3";
+
 
 export default function Home() {
   return (
@@ -14,7 +16,7 @@ export default function Home() {
       <TextReveal>Healing is not about becoming someone new.</TextReveal>
       <Features />
       <ContentSection />
-      <StatsSection />
+      <Stats3/>
       <WallOfLoveSection />
       <CallToAction />
       <FooterSection />

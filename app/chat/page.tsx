@@ -47,7 +47,7 @@ function SessionList({
           <div className="flex items-center w-full gap-3">
             <div className="flex items-center gap-2 min-w-0">
               <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              <h2 className="font-semibold text-sm sm:text-lg truncate">Conversations</h2>
+              <h2 className="font-semibold text-sm sm:text-lg truncate">Wellness Conversations</h2>
             </div>
           </div>
         </div>
@@ -56,8 +56,8 @@ function SessionList({
         {sessions.length === 0 ? (
           <div className="p-4 sm:p-8 text-center">
             <MessageSquare className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-2 sm:mb-3" />
-            <p className="text-xs sm:text-sm text-muted-foreground">No conversations yet</p>
-            <p className="text-xs text-muted-foreground mt-1">Start your first chat below</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">No wellness conversations yet</p>
+            <p className="text-xs text-muted-foreground mt-1">Start your first supportive chat below</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -132,7 +132,7 @@ function MessageList({ messages }: { messages: ChatMessage[] }) {
             <Bot className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
           </div>
           <h3 className="text-base sm:text-lg font-semibold mb-2">
-            Welcome to Zenly Chat
+            Welcome to Your Wellness Space
           </h3>
           <p className="text-sm text-muted-foreground max-w-sm sm:max-w-md">
             I&apos;m here to support your mental wellness journey. How are you feeling today?
@@ -395,8 +395,8 @@ export default function ChatPage() {
                 <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
               <div>
-                <h1 className="font-semibold text-sm sm:text-lg">Zenly Assistant</h1>
-                <p className="text-xs text-muted-foreground hidden sm:block">Your mental wellness companion</p>
+                <h1 className="font-semibold text-sm sm:text-lg">Wellness Assistant</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">Your compassionate mental health companion</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -428,7 +428,7 @@ export default function ChatPage() {
             <div className="flex gap-2 sm:gap-3 max-w-3xl sm:max-w-4xl mx-auto">
               <div className="flex-1 relative">
                 <Input
-                  placeholder="Share what's on your mind..."
+                  placeholder="Share how you're feeling..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -450,7 +450,7 @@ export default function ChatPage() {
                 {loading ? (
                   <>
                     <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                    <span className="hidden sm:inline">Thinking...</span>
+                    <span className="hidden sm:inline">Thinking compassionately...</span>
                   </>
                 ) : (
                   <>
@@ -462,6 +462,7 @@ export default function ChatPage() {
             </div>
             <p className="text-xs text-muted-foreground text-center mt-2">
               Press Enter to send, Shift+Enter for new line
+              <span className="block mt-1 text-primary/60">Remember: I'm here to support you 💚</span>
             </p>
           </div>
         </div>

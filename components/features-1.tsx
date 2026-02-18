@@ -1,93 +1,139 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Settings2, Sparkles, Zap } from "lucide-react";
-import { ReactNode } from "react";
+import { Card } from '@/components/ui/card'
+import { Shield } from 'lucide-react'
+import { Vercel } from '@/components/ui/svgs/vercel'
+import { Supabase } from '@/components/ui/svgs/supabase'
+import { Linear } from '@/components/ui/svgs/linear'
+import { Slack } from '@/components/ui/svgs/slack'
+import { Firebase } from '@/components/ui/svgs/firebase'
+import { ClerkIconDark as Clerk } from '@/components/ui/svgs/clerk'
 
 export default function Features() {
-  return (
-    <section
-      className="bg-zinc-50 py-16 md:py-32 dark:bg-transparent scroll-mt-20"
-      id="features"
-    >
-      <div className="@container mx-auto max-w-5xl px-6">
-        <div className="text-center">
-          <h2 className="text-balance text-4xl font-semibold lg:text-5xl">
-            Built to cover your needs
-          </h2>
-          <p className="mt-4">
-            A space for reflection and growth. Here, you can explore your
-            thoughts in a safe environment, developing resilience and finding a
-            path toward inner peace and understanding on your own terms.
-          </p>
-        </div>
-        <div className="@min-4xl:max-w-full @min-4xl:grid-cols-3 mx-auto mt-8 grid max-w-sm gap-6 *:text-center md:mt-16">
-          <Card className="group shadow-zinc-950/5">
-            <CardHeader className="pb-3">
-              <CardDecorator>
-                <Zap className="size-6" aria-hidden />
-              </CardDecorator>
+    return (
+        <section className="bg-background @container py-24" id="features">
+            <div className="mx-auto max-w-2xl px-6">
+                <div>
+                    <h2 className="text-balance text-4xl font-medium lg:text-5xl">Comprehensive Wellness Support</h2>
+                    <p className="text-muted-foreground mt-4 text-balance">Everything you need to nurture your mental health and build lasting emotional resilience.</p>
+                </div>
+                <div className="@xl:grid-cols-2 mt-12 grid gap-3 *:p-6">
+                    <Card
+                        variant="outline"
+                        className="row-span-2 grid grid-rows-subgrid">
+                        <div className="space-y-2">
+                            <h3 className="text-foreground font-medium">AI-Powered Conversations</h3>
+                            <p className="text-muted-foreground text-sm">Connect with compassionate AI companions that understand and support your emotional journey.</p>
+                        </div>
+                        <div
+                            aria-hidden
+                            className="**:fill-foreground flex h-44 flex-col justify-between pt-8">
+                            <div className="relative flex h-10 items-center gap-12 px-6">
+                                <div className="bg-border absolute inset-0 my-auto h-px"></div>
 
-              <h3 className="mt-6 font-medium">Customizable</h3>
-            </CardHeader>
+                                <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
+                                    <Vercel className="size-3.5" />
+                                </div>
+                                <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
+                                    <Slack className="size-3.5" />
+                                </div>
+                            </div>
+                            <div className="pl-17 relative flex h-10 items-center justify-between gap-12 pr-6">
+                                <div className="bg-border absolute inset-0 my-auto h-px"></div>
 
-            <CardContent>
-              <p className="text-sm">
-                Extensive customization options, allowing you to tailor every
-                aspect to meet your specific needs.
-              </p>
-            </CardContent>
-          </Card>
+                                <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
+                                    <Clerk className="size-3.5" />
+                                </div>
+                                <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
+                                    <Linear className="size-3.5" />
+                                </div>
+                            </div>
+                            <div className="relative flex h-10 items-center gap-20 px-8">
+                                <div className="bg-border absolute inset-0 my-auto h-px"></div>
 
-          <Card className="group shadow-zinc-950/5">
-            <CardHeader className="pb-3">
-              <CardDecorator>
-                <Settings2 className="size-6" aria-hidden />
-              </CardDecorator>
+                                <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
+                                    <Supabase className="size-3.5" />
+                                </div>
+                                <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
+                                    <Firebase className="size-3.5" />
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card
+                        variant="outline"
+                        className="row-span-2 grid grid-rows-subgrid overflow-hidden">
+                        <div className="space-y-2">
+                            <h3 className="text-foreground font-medium">Real-time Mood Tracking</h3>
+                            <p className="text-muted-foreground text-sm">Monitor your emotional patterns and gain insights into your mental well-being instantly.</p>
+                        </div>
+                        <div
+                            aria-hidden
+                            className="relative h-44 translate-y-6">
+                            <div className="bg-foreground/15 absolute inset-0 mx-auto w-px"></div>
+                            <div className="absolute -inset-x-16 top-6 aspect-square rounded-full border"></div>
+                            <div className="border-primary mask-l-from-50% mask-l-to-90% mask-r-from-50% mask-r-to-50% absolute -inset-x-16 top-6 aspect-square rounded-full border"></div>
+                            <div className="absolute -inset-x-8 top-24 aspect-square rounded-full border"></div>
+                            <div className="mask-r-from-50% mask-r-to-90% mask-l-from-50% mask-l-to-50% absolute -inset-x-8 top-24 aspect-square rounded-full border border-lime-500"></div>
+                        </div>
+                    </Card>
+                    <Card
+                        variant="outline"
+                        className="row-span-2 grid grid-rows-subgrid overflow-hidden">
+                        <div className="space-y-2">
+                            <h3 className="text-foreground font-medium">Personalized Care</h3>
+                            <p className="text-muted-foreground mt-2 text-sm">Built with your wellness in mind, featuring tailored insights and adaptive support.</p>
+                        </div>
+                        <div
+                            aria-hidden
+                            className="*:bg-foreground/15 flex h-44 justify-between pb-6 pt-12 *:h-full *:w-px">
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div className="bg-primary!"></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div className="bg-primary!"></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div className="bg-primary!"></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div className="bg-primary!"></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div className="bg-primary!"></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div className="bg-primary!"></div>
+                        </div>
+                    </Card>
+                    <Card
+                        variant="outline"
+                        className="row-span-2 grid grid-rows-subgrid">
+                        <div className="space-y-2">
+                            <h3 className="font-medium">Privacy First</h3>
+                            <p className="text-muted-foreground text-sm">Your mental health data is protected with enterprise-grade security and complete confidentiality.</p>
+                        </div>
 
-              <h3 className="mt-6 font-medium">You have full control</h3>
-            </CardHeader>
-
-            <CardContent>
-              <p className="mt-3 text-sm">
-                You have complete control to create a unique and personalized
-                experience.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="group shadow-zinc-950/5">
-            <CardHeader className="pb-3">
-              <CardDecorator>
-                <Sparkles className="size-6" aria-hidden />
-              </CardDecorator>
-
-              <h3 className="mt-6 font-medium">Powered By AI</h3>
-            </CardHeader>
-
-            <CardContent>
-              <p className="mt-3 text-sm">
-                Elements to functionality, you have complete control to create a
-                unique experience.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </section>
-  );
+                        <div className="pointer-events-none relative -ml-7 flex size-44 items-center justify-center pt-5">
+                            <Shield className="absolute inset-0 top-2.5 size-full stroke-[0.1px] opacity-15" />
+                            <Shield className="size-32 stroke-[0.1px]" />
+                        </div>
+                    </Card>
+                </div>
+            </div>
+        </section>
+    )
 }
-
-const CardDecorator = ({ children }: { children: ReactNode }) => (
-  <div className="relative mx-auto size-36 duration-200 [--color-border:color-mix(in_oklab,var(--color-zinc-950)10%,transparent)] group-hover:[--color-border:color-mix(in_oklab,var(--color-zinc-950)20%,transparent)] dark:[--color-border:color-mix(in_oklab,var(--color-white)15%,transparent)] dark:group-hover:bg-white/5 dark:group-hover:[--color-border:color-mix(in_oklab,var(--color-white)20%,transparent)]">
-    <div
-      aria-hidden
-      className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] bg-[size:24px_24px]"
-    />
-    <div
-      aria-hidden
-      className="bg-radial to-background absolute inset-0 from-transparent to-75%"
-    />
-    <div className="bg-background absolute inset-0 m-auto flex size-12 items-center justify-center border-l border-t">
-      {children}
-    </div>
-  </div>
-);
