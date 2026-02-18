@@ -1,11 +1,5 @@
 import { Card } from '@/components/ui/card'
-import { Shield } from 'lucide-react'
-import { Vercel } from '@/components/ui/svgs/vercel'
-import { Supabase } from '@/components/ui/svgs/supabase'
-import { Linear } from '@/components/ui/svgs/linear'
-import { Slack } from '@/components/ui/svgs/slack'
-import { Firebase } from '@/components/ui/svgs/firebase'
-import { ClerkIconDark as Clerk } from '@/components/ui/svgs/clerk'
+import { Shield, Heart, Brain, Sparkles } from 'lucide-react'
 
 export default function Features() {
     return (
@@ -25,35 +19,35 @@ export default function Features() {
                         </div>
                         <div
                             aria-hidden
-                            className="**:fill-foreground flex h-44 flex-col justify-between pt-8">
+                            className="flex h-44 flex-col justify-between pt-8">
                             <div className="relative flex h-10 items-center gap-12 px-6">
                                 <div className="bg-border absolute inset-0 my-auto h-px"></div>
 
                                 <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
-                                    <Vercel className="size-3.5" />
+                                    <Heart className="size-3.5 text-primary" />
                                 </div>
                                 <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
-                                    <Slack className="size-3.5" />
+                                    <Brain className="size-3.5 text-primary" />
                                 </div>
                             </div>
                             <div className="pl-17 relative flex h-10 items-center justify-between gap-12 pr-6">
                                 <div className="bg-border absolute inset-0 my-auto h-px"></div>
 
                                 <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
-                                    <Clerk className="size-3.5" />
+                                    <Sparkles className="size-3.5 text-primary" />
                                 </div>
                                 <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
-                                    <Linear className="size-3.5" />
+                                    <Shield className="size-3.5 text-primary" />
                                 </div>
                             </div>
                             <div className="relative flex h-10 items-center gap-20 px-8">
                                 <div className="bg-border absolute inset-0 my-auto h-px"></div>
 
                                 <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
-                                    <Supabase className="size-3.5" />
+                                    <Heart className="size-3.5 text-primary" />
                                 </div>
                                 <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
-                                    <Firebase className="size-3.5" />
+                                    <Brain className="size-3.5 text-primary" />
                                 </div>
                             </div>
                         </div>
@@ -84,46 +78,37 @@ export default function Features() {
                         </div>
                         <div
                             aria-hidden
-                            className="*:bg-foreground/15 flex h-44 justify-between pb-6 pt-12 *:h-full *:w-px">
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div className="bg-primary!"></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div className="bg-primary!"></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div className="bg-primary!"></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div className="bg-primary!"></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div className="bg-primary!"></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div className="bg-primary!"></div>
+                            className="flex h-44 justify-between pb-6 pt-12">
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-primary/30 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-primary/30 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-primary/30 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-primary/30 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-foreground/15 h-full w-px"></div>
+                            <div className="bg-primary/30 h-full w-px"></div>
                         </div>
                     </Card>
                     <Card
                         variant="outline"
                         className="row-span-2 grid grid-rows-subgrid">
                         <div className="space-y-2">
-                            <h3 className="font-medium">Privacy First</h3>
+                            <h3 className="text-foreground font-medium">Privacy First</h3>
                             <p className="text-muted-foreground text-sm">Your mental health data is protected with enterprise-grade security and complete confidentiality.</p>
                         </div>
 
