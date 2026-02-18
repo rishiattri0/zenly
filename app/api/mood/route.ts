@@ -11,6 +11,10 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get today's date at midnight in user's timezone
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const moods = await sql`
       SELECT 
         id,
@@ -19,6 +23,7 @@ export async function GET() {
         created_at as timestamp
       FROM zenly_mood_entries 
       WHERE user_id = ${user.id}
+        AND created_at >= ${today.toISOString()}
       ORDER BY created_at DESC
       LIMIT 50
     `;

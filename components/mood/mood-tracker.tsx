@@ -84,10 +84,10 @@ export default function MoodTracker({ onMoodUpdate }: MoodTrackerProps) {
     return "stable";
   };
 
-  const getAverageMood = () => {
-    if (moods.length === 0) return 0;
-    const sum = moods.reduce((acc, mood) => acc + mood.score, 0);
-    return Math.round(sum / moods.length);
+  const getTodayMood = () => {
+    if (moods.length === 0) return null;
+    // Use the most recent mood entry for today
+    return moods[0].score;
   };
 
   const getMoodEmoji = (score: number) => {
@@ -98,7 +98,7 @@ export default function MoodTracker({ onMoodUpdate }: MoodTrackerProps) {
   };
 
   const trend = getMoodTrend();
-  const averageMood = getAverageMood();
+  const todayMood = getTodayMood();
 
   if (loading) {
     return (
@@ -141,11 +141,23 @@ export default function MoodTracker({ onMoodUpdate }: MoodTrackerProps) {
       <CardContent className="space-y-4">
         {/* Current Mood Summary */}
         <div className="text-center p-4 bg-muted/30 rounded-lg">
-          <div className="text-4xl mb-2">{getMoodEmoji(averageMood)}</div>
-          <div className="text-3xl font-bold text-primary cursor-pointer hover:text-primary/80 transition-colors">
-            {averageMood}/100
-          </div>
-          <div className="text-sm text-muted-foreground">Average Mood</div>
+          {todayMood !== null ? (
+            <>
+              <div className="text-4xl mb-2">{getMoodEmoji(todayMood)}</div>
+              <div className="text-3xl font-bold text-primary cursor-pointer hover:text-primary/80 transition-colors">
+                {todayMood}/100
+              </div>
+              <div className="text-sm text-muted-foreground">Today's Mood</div>
+            </>
+          ) : (
+            <>
+              <div className="text-4xl mb-2">🤔</div>
+              <div className="text-3xl font-bold text-muted-foreground">
+                No mood logged
+              </div>
+              <div className="text-sm text-muted-foreground">Track your mood today</div>
+            </>
+          )}
           
           {trend && (
             <div className="flex items-center justify-center gap-1 mt-2">
@@ -161,10 +173,10 @@ export default function MoodTracker({ onMoodUpdate }: MoodTrackerProps) {
           )}
         </div>
 
-        {/* Recent Moods */}
+        {/* Today's Entries */}
         {moods.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium">Recent Entries</h4>
+            <h4 className="text-sm font-medium">Today's Entries</h4>
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {moods.slice(0, 5).map((mood) => (
                 <div key={mood.id} className="flex items-center justify-between p-2 bg-muted/20 rounded">
@@ -180,7 +192,10 @@ export default function MoodTracker({ onMoodUpdate }: MoodTrackerProps) {
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {new Date(mood.timestamp).toLocaleDateString()}
+                    {new Date(mood.timestamp).toLocaleTimeString('en-US', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
                   </div>
                 </div>
               ))}
