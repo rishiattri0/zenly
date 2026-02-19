@@ -26,7 +26,7 @@ import { Container } from "@/components/ui/container";
 import { cn } from "@/lib/utils";
 import { getUserActivities } from "@/lib/static-dashboard-data";
 import MoodTracker from "@/components/mood/mood-tracker";
-import MoodCalendar from "@/components/mood/mood-calendar";
+import MoodSessionsChart from "@/components/mood/mood-sessions-chart";
 import MoodForm from "@/components/mood/mood-form";
 import ActivityLogger from "@/components/activities/activity-logger";
 import ChatAIInsights from "@/components/ai/chat-ai-insights";
@@ -635,6 +635,9 @@ export default function Dashboard() {
             </Card>
           </div>
 
+          {/* Trend Chart */}
+          <MoodSessionsChart />
+
           {/* Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Mood Tracker */}
@@ -643,7 +646,6 @@ export default function Dashboard() {
             {/* Activity Logger */}
             <ActivityLogger onActivityLogged={handleActivityLogged} />
           </div>
-          <MoodCalendar />
         </div>
       </Container>
 
