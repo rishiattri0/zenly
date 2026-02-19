@@ -1,93 +1,119 @@
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Marquee } from "@/components/ui/marquee";
+
+const testimonials = [
+  {
+    quote:
+      "I use Zenly when anxiety spikes late at night. The chat helps me slow down, and the breathing prompts actually pull me out of panic mode.",
+    name: "A. Rivera",
+    role: "Graduate Student",
+    initials: "AR",
+  },
+  {
+    quote:
+      "The mood tracker showed that my stress climbs on Sundays. Once I saw the pattern, I planned my week better and my sleep improved.",
+    name: "M. Johnson",
+    role: "Product Manager",
+    initials: "MJ",
+  },
+  {
+    quote:
+      "Journaling plus AI reflection gives me language for what I feel. I walk into therapy sessions way more prepared now.",
+    name: "K. Patel",
+    role: "Therapy Client",
+    initials: "KP",
+  },
+  {
+    quote:
+      "I recommend Zenly between appointments. It is not a replacement for therapy, but it keeps clients engaged with their coping tools.",
+    name: "Dr. L. Chen",
+    role: "Licensed Counselor",
+    initials: "LC",
+  },
+  {
+    quote:
+      "The daily check-ins gave me structure when I felt overwhelmed. Small consistent steps made my mood more stable across the month.",
+    name: "T. Brooks",
+    role: "Founder",
+    initials: "TB",
+  },
+  {
+    quote:
+      "I like that it feels private and judgment-free. I can reflect honestly, then share key notes with my therapist during sessions.",
+    name: "N. Ali",
+    role: "Software Engineer",
+    initials: "NA",
+  },
+];
+
+function TestimonialCard({
+  quote,
+  name,
+  role,
+  initials,
+}: {
+  quote: string;
+  name: string;
+  role: string;
+  initials: string;
+}) {
+  return (
+    <Card className="w-[320px] border-border/60 bg-card/80 backdrop-blur-sm sm:w-[360px]">
+      <CardHeader className="pb-2">
+        <div className="text-sm font-medium text-primary">User Story</div>
+      </CardHeader>
+      <CardContent className="space-y-5 pt-0">
+        <blockquote className="text-sm leading-relaxed">
+          &ldquo;{quote}&rdquo;
+        </blockquote>
+        <div className="grid grid-cols-[auto_1fr] items-center gap-3">
+          <Avatar className="size-10">
+            <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar>
+          <div>
+            <cite className="text-sm font-medium not-italic">{name}</cite>
+            <span className="text-muted-foreground block text-xs">{role}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Testimonials() {
-    return (
-        <section className="py-16 md:py-32" id="testimonials">
-            <div className="mx-auto max-w-6xl space-y-8 px-6 md:space-y-16">
-                <div className="relative z-10 mx-auto max-w-xl space-y-6 text-center md:space-y-12">
-                    <h2 className="text-4xl font-medium lg:text-5xl">Loved by thousands on their wellness journey</h2>
-                    <p>Zenly has become a trusted companion for people seeking mental wellness support. Hear from those who found peace and balance through our platform.</p>
-                </div>
+  const firstRow = testimonials.slice(0, 3);
+  const secondRow = testimonials.slice(3);
 
-                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-rows-2">
-                    <Card className="grid grid-rows-[auto_1fr] gap-8 sm:col-span-2 sm:p-6 lg:row-span-2">
-                        <CardHeader>
-                            <div className="flex items-center gap-2">
-                                <span className="text-2xl">+</span>
-                                <span className="text-lg font-semibold">Life-changing Support</span>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <blockquote className="grid h-full grid-rows-[1fr_auto] gap-6">
-                                <p className="text-xl font-medium">Zenly has transformed my mental health journey. The AI conversations are incredibly empathetic and the mood tracking helps me understand my patterns. I finally feel supported and understood. This platform has given me tools I never knew I needed for emotional wellness.</p>
+  return (
+    <section className="py-16 md:py-28" id="testimonials">
+      <div className="mx-auto max-w-6xl space-y-8 px-6 md:space-y-14">
+        <div className="relative z-10 mx-auto max-w-2xl space-y-4 text-center">
+          <h2 className="text-4xl font-medium lg:text-5xl">
+            Trusted for everyday mental wellness support
+          </h2>
+          <p className="text-muted-foreground">
+            Real feedback from people using Zenly for anxiety support, mood awareness,
+            reflection, and consistent care between therapy sessions.
+          </p>
+        </div>
 
-                                <div className="grid grid-cols-[auto_1fr] items-center gap-3">
-                                    <Avatar className="size-12">
-                                        <AvatarFallback>SM</AvatarFallback>
-                                    </Avatar>
+        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-background/40 p-2">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-background to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-background to-transparent" />
 
-                                    <div>
-                                        <cite className="text-sm font-medium">Sarah Mitchell</cite>
-                                        <span className="text-muted-foreground block text-sm">Wellness Advocate</span>
-                                    </div>
-                                </div>
-                            </blockquote>
-                        </CardContent>
-                    </Card>
-                    <Card className="md:col-span-2">
-                        <CardContent className="h-full pt-6">
-                            <blockquote className="grid h-full grid-rows-[1fr_auto] gap-6">
-                                <p className="text-xl font-medium">The 24/7 availability has been a lifesaver during difficult moments. Having someone to talk to anytime, day or night, has made such a difference in my anxiety management.</p>
-
-                                <div className="grid grid-cols-[auto_1fr] items-center gap-3">
-                                    <Avatar className="size-12">
-                                        <AvatarFallback>JC</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <cite className="text-sm font-medium">James Chen</cite>
-                                        <span className="text-muted-foreground block text-sm">Mental Health Advocate</span>
-                                    </div>
-                                </div>
-                            </blockquote>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="h-full pt-6">
-                            <blockquote className="grid h-full grid-rows-[1fr_auto] gap-6">
-                                <p>The mood analytics helped me identify patterns I never noticed before. Understanding my emotional triggers has been transformative for my daily wellbeing.</p>
-
-                                <div className="grid items-center gap-3 [grid-template-columns:auto_1fr]">
-                                    <Avatar className="size-12">
-                                        <AvatarFallback>EP</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <cite className="text-sm font-medium">Emma Parker</cite>
-                                        <span className="text-muted-foreground block text-sm">Yoga Instructor</span>
-                                    </div>
-                                </div>
-                            </blockquote>
-                        </CardContent>
-                    </Card>
-                    <Card className="card variant-mixed">
-                        <CardContent className="h-full pt-6">
-                            <blockquote className="grid h-full grid-rows-[1fr_auto] gap-6">
-                                <p>I&apos;ve tried many wellness apps, but Zenly&apos;s compassionate AI conversations feel genuinely caring. It&apos;s like having a supportive friend who&apos;s always there.</p>
-
-                                <div className="grid grid-cols-[auto_1fr] gap-3">
-                                    <Avatar className="size-12">
-                                        <AvatarFallback>RA</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="text-sm font-medium">Robert Adams</p>
-                                        <span className="text-muted-foreground block text-sm">Therapist</span>
-                                    </div>
-                                </div>
-                            </blockquote>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-        </section>
-    )
+          <Marquee pauseOnHover className="[--duration:36s] py-2">
+            {firstRow.map((item) => (
+              <TestimonialCard key={`${item.name}-${item.role}`} {...item} />
+            ))}
+          </Marquee>
+          <Marquee pauseOnHover reverse className="[--duration:40s] py-2">
+            {secondRow.map((item) => (
+              <TestimonialCard key={`${item.name}-${item.role}`} {...item} />
+            ))}
+          </Marquee>
+        </div>
+      </div>
+    </section>
+  );
 }

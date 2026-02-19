@@ -1,124 +1,108 @@
-import { Card } from '@/components/ui/card'
-import { Shield, Heart, Brain, Sparkles } from 'lucide-react'
+"use client";
+
+import { motion } from "framer-motion";
+import { Brain, Heart, Shield, Sparkles } from "lucide-react";
+import { BentoGrid } from "@/components/ui/bento-grid";
+import { Card } from "@/components/ui/card";
+
+const features = [
+  {
+    title: "AI-Powered Conversations",
+    description:
+      "Connect with compassionate AI companions that understand and support your emotional journey.",
+    icon: Sparkles,
+    className: "col-span-1",
+    bg: "from-rose-500/10 via-orange-500/10 to-amber-500/10",
+    points: ["24/7 support", "Compassionate responses"],
+  },
+  {
+    title: "Real-time Mood Tracking",
+    description:
+      "Monitor your emotional patterns and gain insights into your mental well-being instantly.",
+    icon: Heart,
+    className: "col-span-1",
+    bg: "from-emerald-500/10 via-lime-500/10 to-cyan-500/10",
+    points: ["Daily mood logs", "Trend visibility"],
+  },
+  {
+    title: "Personalized Care",
+    description:
+      "Built with your wellness in mind, featuring tailored insights and adaptive support.",
+    icon: Brain,
+    className: "col-span-1",
+    bg: "from-sky-500/10 via-blue-500/10 to-indigo-500/10",
+    points: ["Adaptive guidance", "Actionable insights"],
+  },
+  {
+    title: "Privacy First",
+    description:
+      "Your mental health data is protected with enterprise-grade security and complete confidentiality.",
+    icon: Shield,
+    className: "col-span-1",
+    bg: "from-slate-500/10 via-zinc-500/10 to-stone-500/10",
+    points: ["Encrypted storage", "Privacy by default"],
+  },
+];
 
 export default function Features() {
-    return (
-        <section className="bg-background @container py-24" id="features">
-            <div className="mx-auto max-w-2xl px-6">
-                <div>
-                    <h2 className="text-balance text-4xl font-medium lg:text-5xl">Comprehensive Wellness Support</h2>
-                    <p className="text-muted-foreground mt-4 text-balance">Everything you need to nurture your mental health and build lasting emotional resilience.</p>
+  return (
+    <section className="bg-background py-24" id="features">
+      <div className="mx-auto max-w-6xl px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+          viewport={{ once: true, amount: 0.25 }}
+          className="max-w-2xl"
+        >
+          <h2 className="text-balance text-4xl font-medium lg:text-5xl">
+            Comprehensive Wellness Support
+          </h2>
+          <p className="text-muted-foreground mt-4 text-balance">
+            Everything you need to nurture your mental health and build lasting emotional resilience.
+          </p>
+        </motion.div>
+
+        <BentoGrid className="mt-12 grid-cols-1 auto-rows-[16rem] gap-4 md:grid-cols-2 lg:grid-cols-2">
+          {features.map((feature, index) => (
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.08 }}
+              viewport={{ once: true, amount: 0.2 }}
+              className={feature.className}
+            >
+              <Card className="group relative h-full overflow-hidden border-border/60 bg-card/80 p-6 backdrop-blur-sm">
+                <div className={`absolute inset-0 bg-gradient-to-br ${feature.bg}`} />
+                <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-primary/10 blur-2xl" />
                 </div>
-                <div className="@xl:grid-cols-2 mt-12 grid gap-3 *:p-6">
-                    <Card
-                        variant="outline"
-                        className="row-span-2 grid grid-rows-subgrid">
-                        <div className="space-y-2">
-                            <h3 className="text-foreground font-medium">AI-Powered Conversations</h3>
-                            <p className="text-muted-foreground text-sm">Connect with compassionate AI companions that understand and support your emotional journey.</p>
-                        </div>
-                        <div
-                            aria-hidden
-                            className="flex h-44 flex-col justify-between pt-8">
-                            <div className="relative flex h-10 items-center gap-12 px-6">
-                                <div className="bg-border absolute inset-0 my-auto h-px"></div>
 
-                                <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
-                                    <Heart className="size-3.5 text-primary" />
-                                </div>
-                                <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
-                                    <Brain className="size-3.5 text-primary" />
-                                </div>
-                            </div>
-                            <div className="pl-17 relative flex h-10 items-center justify-between gap-12 pr-6">
-                                <div className="bg-border absolute inset-0 my-auto h-px"></div>
-
-                                <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
-                                    <Sparkles className="size-3.5 text-primary" />
-                                </div>
-                                <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
-                                    <Shield className="size-3.5 text-primary" />
-                                </div>
-                            </div>
-                            <div className="relative flex h-10 items-center gap-20 px-8">
-                                <div className="bg-border absolute inset-0 my-auto h-px"></div>
-
-                                <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
-                                    <Heart className="size-3.5 text-primary" />
-                                </div>
-                                <div className="bg-card shadow-black/6.5 ring-border relative flex h-8 items-center rounded-full px-3 shadow-sm ring">
-                                    <Brain className="size-3.5 text-primary" />
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-                    <Card
-                        variant="outline"
-                        className="row-span-2 grid grid-rows-subgrid overflow-hidden">
-                        <div className="space-y-2">
-                            <h3 className="text-foreground font-medium">Real-time Mood Tracking</h3>
-                            <p className="text-muted-foreground text-sm">Monitor your emotional patterns and gain insights into your mental well-being instantly.</p>
-                        </div>
-                        <div
-                            aria-hidden
-                            className="relative h-44 translate-y-6">
-                            <div className="bg-foreground/15 absolute inset-0 mx-auto w-px"></div>
-                            <div className="absolute -inset-x-16 top-6 aspect-square rounded-full border"></div>
-                            <div className="border-primary mask-l-from-50% mask-l-to-90% mask-r-from-50% mask-r-to-50% absolute -inset-x-16 top-6 aspect-square rounded-full border"></div>
-                            <div className="absolute -inset-x-8 top-24 aspect-square rounded-full border"></div>
-                            <div className="mask-r-from-50% mask-r-to-90% mask-l-from-50% mask-l-to-50% absolute -inset-x-8 top-24 aspect-square rounded-full border border-lime-500"></div>
-                        </div>
-                    </Card>
-                    <Card
-                        variant="outline"
-                        className="row-span-2 grid grid-rows-subgrid overflow-hidden">
-                        <div className="space-y-2">
-                            <h3 className="text-foreground font-medium">Personalized Care</h3>
-                            <p className="text-muted-foreground mt-2 text-sm">Built with your wellness in mind, featuring tailored insights and adaptive support.</p>
-                        </div>
-                        <div
-                            aria-hidden
-                            className="flex h-44 justify-between pb-6 pt-12">
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-primary/30 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-primary/30 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-primary/30 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-primary/30 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-foreground/15 h-full w-px"></div>
-                            <div className="bg-primary/30 h-full w-px"></div>
-                        </div>
-                    </Card>
-                    <Card
-                        variant="outline"
-                        className="row-span-2 grid grid-rows-subgrid">
-                        <div className="space-y-2">
-                            <h3 className="text-foreground font-medium">Privacy First</h3>
-                            <p className="text-muted-foreground text-sm">Your mental health data is protected with enterprise-grade security and complete confidentiality.</p>
-                        </div>
-
-                        <div className="pointer-events-none relative -ml-7 flex size-44 items-center justify-center pt-5">
-                            <Shield className="absolute inset-0 top-2.5 size-full stroke-[0.1px] opacity-15" />
-                            <Shield className="size-32 stroke-[0.1px]" />
-                        </div>
-                    </Card>
+                <div className="relative flex h-full flex-col justify-between">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-border/70 bg-background/70">
+                    <feature.icon className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold">{feature.title}</h3>
+                    <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {feature.points.map((point) => (
+                        <span
+                          key={point}
+                          className="rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-xs text-muted-foreground"
+                        >
+                          {point}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-            </div>
-        </section>
-    )
+              </Card>
+            </motion.div>
+          ))}
+        </BentoGrid>
+      </div>
+    </section>
+  );
 }

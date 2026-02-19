@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, MessageSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
 import { useSession } from "@/lib/contexts/session-context";
@@ -25,6 +25,7 @@ export default function Navbar() {
   if (pathname?.startsWith("/chat")) return null;
 
   const isLanding = pathname === "/";
+  const isDashboard = pathname?.startsWith("/dashboard");
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -73,12 +74,21 @@ export default function Navbar() {
               {!loading &&
                 (isAuthenticated ? (
                   <>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href="/dashboard">
-                        <LayoutDashboard className="size-4" />
-                        <span>Dashboard</span>
-                      </Link>
-                    </Button>
+                    {!isDashboard ? (
+                      <Button asChild variant="outline" size="sm">
+                        <Link href="/dashboard">
+                          <LayoutDashboard className="size-4" />
+                          <span>Dashboard</span>
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button asChild variant="outline" size="sm">
+                        <Link href="/chat">
+                          <MessageSquare className="size-4" />
+                          <span>Chat</span>
+                        </Link>
+                      </Button>
+                    )}
                     <Button variant="ghost" size="sm" onClick={handleSignOut}>
                       <LogOut className="size-4" />
                       <span>Sign out</span>
@@ -141,12 +151,21 @@ export default function Navbar() {
                 <div className="grid grid-cols-2 gap-2">
                   {isAuthenticated ? (
                     <>
-                      <Button asChild variant="outline" size="sm" onClick={closeMenu}>
-                        <Link href="/dashboard">
-                          <LayoutDashboard className="size-4" />
-                          <span>Dashboard</span>
-                        </Link>
-                      </Button>
+                      {!isDashboard ? (
+                        <Button asChild variant="outline" size="sm" onClick={closeMenu}>
+                          <Link href="/dashboard">
+                            <LayoutDashboard className="size-4" />
+                            <span>Dashboard</span>
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Button asChild variant="outline" size="sm" onClick={closeMenu}>
+                          <Link href="/chat">
+                            <MessageSquare className="size-4" />
+                            <span>Chat</span>
+                          </Link>
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm" onClick={handleSignOut}>
                         <LogOut className="size-4" />
                         <span>Sign out</span>

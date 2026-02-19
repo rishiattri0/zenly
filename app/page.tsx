@@ -6,6 +6,7 @@ import FooterSection from "@/components/footer";
 import ContentSection from "@/components/content-5";
 import CallToAction from "@/components/call-to-action";
 import Stats3 from "@/components/stats-3";
+import FAQsFour from "@/components/faqs-4";
 
 
 export default function Home() {
@@ -17,6 +18,7 @@ export default function Home() {
       <ContentSection />
       <Stats3/>
       <WallOfLoveSection />
+      <FAQsFour />
       <CallToAction />
       <FooterSection />
     </div>

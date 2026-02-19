@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
+import { BentoGrid } from "@/components/ui/bento-grid";
 import { cn } from "@/lib/utils";
 import { getUserActivities } from "@/lib/static-dashboard-data";
 import MoodTracker from "@/components/mood/mood-tracker";
@@ -417,7 +418,7 @@ export default function Dashboard() {
         <div className="absolute top-40 -left-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
       <div className="flex-1 relative">
-      <Container className="pt-20 pb-8 space-y-6 relative">
+      <Container className="pt-24 md:pt-28 pb-8 space-y-6 relative">
         {/* Header Section */}
         <div className="flex justify-between items-center rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm px-5 py-4 shadow-sm">
           <motion.div
@@ -448,11 +449,9 @@ export default function Dashboard() {
         </div>
 
         {/* Main Grid Layout */}
-        <div className="space-y-6">
-          {/* Top Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Quick Actions Card */}
-            <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm relative overflow-hidden group transition hover:shadow-md">
+        <BentoGrid className="grid-cols-1 auto-rows-auto gap-4 md:grid-cols-2 xl:grid-cols-6">
+          {/* Quick Actions Card */}
+          <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm relative overflow-hidden group transition hover:shadow-md md:col-span-2 xl:col-span-2">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent" />
               <CardContent className="p-6 relative">
                 <div className="space-y-6">
@@ -541,10 +540,10 @@ export default function Dashboard() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+          </Card>
 
-            {/* Today's Overview Card */}
-            <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm transition hover:shadow-md">
+          {/* Today's Overview Card */}
+          <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm transition hover:shadow-md md:col-span-2 xl:col-span-2">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
@@ -590,9 +589,10 @@ export default function Dashboard() {
                   Last updated: {format(dailyStats.lastUpdated, "h:mm a")}
                 </div>
               </CardContent>
-            </Card>
+          </Card>
 
-            {/* Chat AI Insights Card */}
+          {/* Chat AI Insights Card */}
+          <div className="md:col-span-2 xl:col-span-2">
             <ChatAIInsights 
               sessions={chatSessions} 
               messages={chatMessages}
@@ -601,9 +601,10 @@ export default function Dashboard() {
                 // Handle AI insight actions here
               }}
             />
+          </div>
 
-            {/* Chat Insights Card */}
-            <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm transition hover:shadow-md">
+          {/* Chat Insights Card */}
+          <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm transition hover:shadow-md md:col-span-2 xl:col-span-2">
               <CardHeader>
                 <CardTitle>Chat Insights</CardTitle>
                 <CardDescription>Overview of your conversations</CardDescription>
@@ -632,21 +633,23 @@ export default function Dashboard() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          </div>
+          </Card>
 
           {/* Trend Chart */}
-          <MoodSessionsChart />
+          <div className="md:col-span-2 xl:col-span-4">
+            <MoodSessionsChart />
+          </div>
 
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Mood Tracker */}
+          {/* Mood Tracker */}
+          <div className="md:col-span-1 xl:col-span-3">
             <MoodTracker onMoodUpdate={fetchDailyStats} />
-            
-            {/* Activity Logger */}
+          </div>
+
+          {/* Activity Logger */}
+          <div className="md:col-span-1 xl:col-span-3">
             <ActivityLogger onActivityLogged={handleActivityLogged} />
           </div>
-        </div>
+        </BentoGrid>
       </Container>
 
       {/* Mood tracking modal */}
