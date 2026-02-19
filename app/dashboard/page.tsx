@@ -5,10 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
   Brain,
-  Calendar,
   Activity,
-  Sun,
-  Moon,
   Heart,
   Trophy,
   Sparkles,
@@ -29,13 +26,13 @@ import { Container } from "@/components/ui/container";
 import { cn } from "@/lib/utils";
 import { getUserActivities } from "@/lib/static-dashboard-data";
 import MoodTracker from "@/components/mood/mood-tracker";
+import MoodCalendar from "@/components/mood/mood-calendar";
 import MoodForm from "@/components/mood/mood-form";
 import ActivityLogger from "@/components/activities/activity-logger";
 import ChatAIInsights from "@/components/ai/chat-ai-insights";
 import {
   addDays,
   format,
-  subDays,
   startOfDay,
   isWithinInterval,
 } from "date-fns";
@@ -126,135 +123,6 @@ const calculateDailyStats = (activities: Activity[]): DailyStats => {
   };
 };
 
-// Rename the function
-const generateInsights = (activities: Activity[]) => {
-  const insights: {
-    title: string;
-    description: string;
-    icon: React.ComponentType<{ className?: string }>;
-    priority: "low" | "medium" | "high";
-  }[] = [];
-
-  // Get activities from last 7 days
-  const lastWeek = subDays(new Date(), 7);
-  const recentActivities = activities.filter(
-    (a) => new Date(a.timestamp) >= lastWeek
-  );
-
-  // Analyze mood patterns
-  const moodEntries = recentActivities.filter(
-    (a) => a.type === "mood" && a.moodScore !== null
-  );
-  if (moodEntries.length >= 2) {
-    const averageMood =
-      moodEntries.reduce((acc, curr) => acc + (curr.moodScore || 0), 0) /
-      moodEntries.length;
-    const latestMood = moodEntries[moodEntries.length - 1].moodScore || 0;
-
-    if (latestMood > averageMood) {
-      insights.push({
-        title: "Mood Improvement",
-        description:
-          "Your recent mood scores are above your weekly average. Keep up the good work!",
-        icon: Brain,
-        priority: "high",
-      });
-    } else if (latestMood < averageMood - 20) {
-      insights.push({
-        title: "Mood Change Detected",
-        description:
-          "I've noticed a dip in your mood. Would you like to try some mood-lifting activities?",
-        icon: Heart,
-        priority: "high",
-      });
-    }
-  }
-
-  // Analyze activity patterns
-  const mindfulnessActivities = recentActivities.filter((a) =>
-    ["game", "meditation", "breathing"].includes(a.type)
-  );
-  if (mindfulnessActivities.length > 0) {
-    const dailyAverage = mindfulnessActivities.length / 7;
-    if (dailyAverage >= 1) {
-      insights.push({
-        title: "Consistent Practice",
-        description: `You've been regularly engaging in mindfulness activities. This can help reduce stress and improve focus.`,
-        icon: Trophy,
-        priority: "medium",
-      });
-    } else {
-      insights.push({
-        title: "Mindfulness Opportunity",
-        description:
-          "Try incorporating more mindfulness activities into your daily routine.",
-        icon: Sparkles,
-        priority: "low",
-      });
-    }
-  }
-
-  // Check activity completion rate
-  const completedActivities = recentActivities.filter((a) => a.completed);
-  const completionRate =
-    recentActivities.length > 0
-      ? (completedActivities.length / recentActivities.length) * 100
-      : 0;
-
-  if (completionRate >= 80) {
-    insights.push({
-      title: "High Achievement",
-      description: `You've completed ${Math.round(
-        completionRate
-      )}% of your activities this week. Excellent commitment!`,
-      icon: Trophy,
-      priority: "high",
-    });
-  } else if (completionRate < 50) {
-    insights.push({
-      title: "Activity Reminder",
-      description:
-        "You might benefit from setting smaller, more achievable daily goals.",
-      icon: Calendar,
-      priority: "medium",
-    });
-  }
-
-  // Time pattern analysis
-  const morningActivities = recentActivities.filter(
-    (a) => new Date(a.timestamp).getHours() < 12
-  );
-  const eveningActivities = recentActivities.filter(
-    (a) => new Date(a.timestamp).getHours() >= 18
-  );
-
-  if (morningActivities.length > eveningActivities.length) {
-    insights.push({
-      title: "Morning Person",
-      description:
-        "You're most active in the mornings. Consider scheduling important tasks during your peak hours.",
-      icon: Sun,
-      priority: "medium",
-    });
-  } else if (eveningActivities.length > morningActivities.length) {
-    insights.push({
-      title: "Evening Routine",
-      description:
-        "You tend to be more active in the evenings. Make sure to wind down before bedtime.",
-      icon: Moon,
-      priority: "medium",
-    });
-  }
-
-  // Sort insights by priority and return top 3
-  return insights
-    .sort((a, b) => {
-      const priorityOrder = { high: 0, medium: 1, low: 2 };
-      return priorityOrder[a.priority] - priorityOrder[b.priority];
-    })
-    .slice(0, 3);
-};
-
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -267,21 +135,11 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, sessionLoading, router]);
 
-  // Rename the state variable
-  const [insights, setInsights] = useState<
-    {
-      title: string;
-      description: string;
-      icon: React.ComponentType<{ className?: string }>;
-      priority: "low" | "medium" | "high";
-    }[]
-  >([]);
-
   // New states for activities and wearables
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [showCheckInChat, setShowCheckInChat] = useState(false);
   const [showMoodModal, setShowMoodModal] = useState(false);
   const [showActivityLogger, setShowActivityLogger] = useState(false);
+  const [refreshingStats, setRefreshingStats] = useState(false);
   const [dailyStats, setDailyStats] = useState<DailyStats>({
     moodScore: null,
     completionRate: 100,
@@ -340,7 +198,7 @@ export default function Dashboard() {
           lastActivityAt: data.lastActivityAt || null,
           avgMessagesPerSession: Number(data.avgMessagesPerSession) || 0,
         });
-      } catch (e) {
+      } catch {
         // no-op
       }
     };
@@ -356,15 +214,9 @@ export default function Dashboard() {
     }
   }, [activities]);
 
-  // Update the effect
-  useEffect(() => {
-    if (activities.length > 0) {
-      setInsights(generateInsights(activities));
-    }
-  }, [activities]);
-
   // Add function to fetch daily stats
   const fetchDailyStats = useCallback(async () => {
+    setRefreshingStats(true);
     try {
       const sessions = await getAllChatSessions();
       
@@ -385,17 +237,19 @@ export default function Dashboard() {
         // If mood API fails, try activities as fallback
         let activities: Activity[] = [];
         try {
-          const activitiesResponse = await fetch("/api/activities/today", { credentials: "include" });
+          const activitiesResponse = await fetch("/api/activities", { credentials: "include" });
           if (activitiesResponse.ok) {
             activities = await activitiesResponse.json();
-          } else {
-            activities = []; 
           }
         } catch {
-          activities = []; 
+          activities = [];
         }
+        const today = new Date().toDateString();
         const moodEntries = activities.filter(
-          (a: Activity) => a.type === "mood" && a.moodScore !== null
+          (a: Activity) =>
+            a.type === "mood" &&
+            new Date(a.timestamp).toDateString() === today &&
+            a.moodScore !== null
         );
         if (moodEntries.length > 0) {
           moodScore = Math.round(
@@ -435,6 +289,8 @@ export default function Dashboard() {
       });
     } catch (error) {
       console.error("Error fetching daily stats:", error);
+    } finally {
+      setRefreshingStats(false);
     }
   }, [activities]);
 
@@ -555,11 +411,15 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <div className="flex-1">
-      <Container className="pt-20 pb-8 space-y-6">
+    <div className="relative min-h-screen bg-background flex flex-col overflow-hidden">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 -right-32 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute top-40 -left-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
+      </div>
+      <div className="flex-1 relative">
+      <Container className="pt-20 pb-8 space-y-6 relative">
         {/* Header Section */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm px-5 py-4 shadow-sm">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -581,6 +441,9 @@ export default function Dashboard() {
                 day: "numeric",
               })}
             </p>
+            <p className="text-sm text-muted-foreground/80">
+              Your daily command center for mental wellness.
+            </p>
           </motion.div>
         </div>
 
@@ -589,7 +452,7 @@ export default function Dashboard() {
           {/* Top Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Quick Actions Card */}
-            <Card className="border-primary/10 relative overflow-hidden group">
+            <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm relative overflow-hidden group transition hover:shadow-md">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent" />
               <CardContent className="p-6 relative">
                 <div className="space-y-6">
@@ -681,7 +544,7 @@ export default function Dashboard() {
             </Card>
 
             {/* Today's Overview Card */}
-            <Card className="border-primary/10">
+            <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm transition hover:shadow-md">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
@@ -696,8 +559,9 @@ export default function Dashboard() {
                     size="icon"
                     onClick={fetchDailyStats}
                     className="h-8 w-8"
+                    disabled={refreshingStats}
                   >
-                    <Loader2 className={cn("h-4 w-4", "animate-spin")} />
+                    <Loader2 className={cn("h-4 w-4", refreshingStats && "animate-spin")} />
                   </Button>
                 </div>
               </CardHeader>
@@ -739,7 +603,7 @@ export default function Dashboard() {
             />
 
             {/* Chat Insights Card */}
-            <Card className="border-primary/10">
+            <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm transition hover:shadow-md">
               <CardHeader>
                 <CardTitle>Chat Insights</CardTitle>
                 <CardDescription>Overview of your conversations</CardDescription>
@@ -763,7 +627,7 @@ export default function Dashboard() {
                     <p className="text-2xl font-bold mt-1">
                       {chatInsights.lastActivityAt
                         ? format(new Date(chatInsights.lastActivityAt), "MMM d, h:mm a")
-                        : "—"}
+                        : "N/A"}
                     </p>
                   </div>
                 </div>
@@ -779,30 +643,9 @@ export default function Dashboard() {
             {/* Activity Logger */}
             <ActivityLogger onActivityLogged={handleActivityLogged} />
           </div>
+          <MoodCalendar />
         </div>
       </Container>
-
-
-      {/* AI check-in chat */}
-      {showCheckInChat && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
-          <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-background border-l shadow-lg">
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between px-4 py-3 border-b">
-                <h3 className="font-semibold">AI Check-in</h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowCheckInChat(false)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4"></div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Mood tracking modal */}
       {showMoodModal && (

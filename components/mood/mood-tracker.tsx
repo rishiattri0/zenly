@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Heart, TrendingUp, TrendingDown, Minus, Frown, Meh, Smile, Laugh, Sparkles } from "lucide-react";
 import MoodForm from "./mood-form";
 
 interface MoodEntry {
@@ -90,15 +90,17 @@ export default function MoodTracker({ onMoodUpdate }: MoodTrackerProps) {
     return moods[0].score;
   };
 
-  const getMoodEmoji = (score: number) => {
-    if (score <= 30) return "😢";
-    if (score <= 50) return "😐";
-    if (score <= 70) return "🙂";
-    return "😊";
+  const getMoodVisual = (score: number) => {
+    if (score <= 20) return { icon: Frown, color: "text-rose-500", label: "Very Low" };
+    if (score <= 40) return { icon: Meh, color: "text-orange-500", label: "Low" };
+    if (score <= 65) return { icon: Smile, color: "text-yellow-500", label: "Okay" };
+    if (score <= 85) return { icon: Laugh, color: "text-emerald-500", label: "Good" };
+    return { icon: Sparkles, color: "text-sky-500", label: "Excellent" };
   };
 
   const trend = getMoodTrend();
   const todayMood = getTodayMood();
+  const todayMoodVisual = todayMood !== null ? getMoodVisual(todayMood) : null;
 
   if (loading) {
     return (
@@ -143,15 +145,24 @@ export default function MoodTracker({ onMoodUpdate }: MoodTrackerProps) {
         <div className="text-center p-4 bg-muted/30 rounded-lg">
           {todayMood !== null ? (
             <>
-              <div className="text-4xl mb-2">{getMoodEmoji(todayMood)}</div>
+              <div className="mb-2 inline-flex h-14 w-14 items-center justify-center rounded-full bg-background border">
+                {todayMoodVisual && (
+                  <todayMoodVisual.icon className={`h-7 w-7 ${todayMoodVisual.color}`} />
+                )}
+              </div>
               <div className="text-3xl font-bold text-primary cursor-pointer hover:text-primary/80 transition-colors">
                 {todayMood}/100
               </div>
-              <div className="text-sm text-muted-foreground">Today's Mood</div>
+              <div className={`text-sm font-medium ${todayMoodVisual?.color || "text-muted-foreground"}`}>
+                {todayMoodVisual?.label}
+              </div>
+              <div className="text-sm text-muted-foreground">Today&apos;s Mood</div>
             </>
           ) : (
             <>
-              <div className="text-4xl mb-2">🤔</div>
+              <div className="mb-2 inline-flex h-14 w-14 items-center justify-center rounded-full bg-background border">
+                <Meh className="h-7 w-7 text-muted-foreground" />
+              </div>
               <div className="text-3xl font-bold text-muted-foreground">
                 No mood logged
               </div>
@@ -176,12 +187,19 @@ export default function MoodTracker({ onMoodUpdate }: MoodTrackerProps) {
         {/* Today's Entries */}
         {moods.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium">Today's Entries</h4>
+            <h4 className="text-sm font-medium">Today&apos;s Entries</h4>
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {moods.slice(0, 5).map((mood) => (
                 <div key={mood.id} className="flex items-center justify-between p-2 bg-muted/20 rounded">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{getMoodEmoji(mood.score)}</span>
+                    {(() => {
+                      const visual = getMoodVisual(mood.score);
+                      return (
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-background border">
+                          <visual.icon className={`h-3.5 w-3.5 ${visual.color}`} />
+                        </span>
+                      );
+                    })()}
                     <div>
                       <div className="text-sm font-medium">{mood.score}/100</div>
                       {mood.note && (

@@ -12,6 +12,30 @@ async function ensureSessionBelongsToUser(sessionId: string, userId: string): Pr
   return Array.isArray(result) && result.length > 0;
 }
 
+function isHighRiskMessage(content: string): boolean {
+  const normalized = content.toLowerCase();
+  const highRiskPatterns = [
+    "want to die",
+    "kill myself",
+    "end my life",
+    "suicide",
+    "hurt myself",
+    "self harm",
+    "overdose",
+    "no reason to live",
+    "can't go on",
+  ];
+  return highRiskPatterns.some((p) => normalized.includes(p));
+}
+
+function buildCrisisResponse(): string {
+  return [
+    "I am really glad you shared this with me. You matter, and you deserve immediate support from a real person right now.",
+    "If you are in immediate danger, call 911 now. In the U.S., you can call or text 988 to reach the Suicide & Crisis Lifeline 24/7.",
+    "If you want, we can stay focused on one next safe step together while you reach out.",
+  ].join(" ");
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -48,6 +72,25 @@ export async function POST(
       .slice(0, 48);
     if (titleCandidate) {
       await updateChatSessionTitleIfDefault(sessionId, titleCandidate, "Chat");
+    }
+
+    // Crisis safety mode: prioritize immediate real-world support.
+    if (isHighRiskMessage(content)) {
+      const crisisText = buildCrisisResponse();
+      const asstMsg = await addChatMessage(sessionId, "assistant", crisisText);
+      if (!asstMsg) {
+        return NextResponse.json({ error: "Failed to add assistant message" }, { status: 500 });
+      }
+      await updateChatSessionUpdatedAt(sessionId);
+      return NextResponse.json({
+        message: crisisText,
+        id: asstMsg.id,
+        crisisMode: true,
+        crisisResources: [
+          { name: "Emergency Services", contact: "911" },
+          { name: "Suicide & Crisis Lifeline", contact: "Call or text 988" },
+        ],
+      });
     }
 
     const model = process.env.GROQ_MODEL || "llama-3.1-8b-instant";

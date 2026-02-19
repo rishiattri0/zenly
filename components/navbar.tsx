@@ -11,7 +11,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, LayoutDashboard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
-import { Logo } from "@/components/logo";
 import { useSession } from "@/lib/contexts/session-context";
 
 const menuItems = [

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 export default function Testimonials() {
     return (
@@ -14,7 +14,7 @@ export default function Testimonials() {
                     <Card className="grid grid-rows-[auto_1fr] gap-8 sm:col-span-2 sm:p-6 lg:row-span-2">
                         <CardHeader>
                             <div className="flex items-center gap-2">
-                                <span className="text-2xl">💚</span>
+                                <span className="text-2xl">+</span>
                                 <span className="text-lg font-semibold">Life-changing Support</span>
                             </div>
                         </CardHeader>
@@ -72,7 +72,7 @@ export default function Testimonials() {
                     <Card className="card variant-mixed">
                         <CardContent className="h-full pt-6">
                             <blockquote className="grid h-full grid-rows-[1fr_auto] gap-6">
-                                <p>I've tried many wellness apps, but Zenly's compassionate AI conversations feel genuinely caring. It's like having a supportive friend who's always there.</p>
+                                <p>I&apos;ve tried many wellness apps, but Zenly&apos;s compassionate AI conversations feel genuinely caring. It&apos;s like having a supportive friend who&apos;s always there.</p>
 
                                 <div className="grid grid-cols-[auto_1fr] gap-3">
                                     <Avatar className="size-12">

@@ -9,7 +9,7 @@ export default function ContentSection() {
             Your mental wellness is our priority.
           </h2>
           <p>
-            We're more than just an app. We provide a complete wellness ecosystem —
+            We&apos;re more than just an app. We provide a complete wellness ecosystem,
             from compassionate AI conversations to mood tracking and mindfulness tools
             designed to support your journey to emotional balance and inner peace.
           </p>

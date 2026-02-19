@@ -33,8 +33,13 @@ export async function createUser(
       updated_at: now,
     };
     memory.users.push(user);
-    const { password_hash: _ph, ...safe } = user;
-    return safe as ZenlyUser;
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    };
   }
   const rows = (await sql`
     INSERT INTO public.zenly_users (email, name, password_hash)
@@ -85,8 +90,13 @@ export async function getSessionUser(sessionToken: string): Promise<ZenlyUser | 
     if (!s) return null;
     const u = memory.users.find((u) => u.id === s.user_id);
     if (!u) return null;
-    const { password_hash: _ph, ...safe } = u;
-    return safe as ZenlyUser;
+    return {
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      created_at: u.created_at,
+      updated_at: u.updated_at,
+    };
   }
   const rows = (await sql`
     SELECT u.id, u.email, u.name, u.created_at, u.updated_at
@@ -110,7 +120,6 @@ export async function deleteSession(sessionToken: string): Promise<void> {
 
 // Simple in-memory fallback store for local development
 declare global {
-  // eslint-disable-next-line no-var
   var __ZENLY_MEM__:
     | {
         users: Array<{ id: string; email: string; name: string; password_hash: string; created_at: Date; updated_at: Date }>;

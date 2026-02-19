@@ -1,20 +1,42 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Plus, MessageSquare, Loader2, Bot, User, X, Menu, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import {
+  Bot,
+  Loader2,
+  Menu,
+  MessageSquare,
+  Plus,
+  Send,
+  Trash2,
+  User,
+  X,
+  ShieldAlert,
+  ClipboardList,
+} from "lucide-react";
 import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
 
 type Role = "user" | "assistant";
+
 interface ChatSession {
   id: string;
   title?: string;
   created_at?: string;
   updated_at?: string;
 }
+
 interface ChatMessage {
   id: string;
   role: Role;
@@ -22,93 +44,146 @@ interface ChatMessage {
   created_at: string;
 }
 
-function SessionList({
+interface SessionSummary {
+  summary: string;
+  keyThemes: string[];
+  moodTrend: "improving" | "stable" | "declining" | "mixed";
+  suggestedNextStep: string;
+  updatedAt: string;
+}
+
+function SummaryPanel({
+  summaryLoading,
+  summary,
+}: {
+  summaryLoading: boolean;
+  summary: SessionSummary | null;
+}) {
+  if (summaryLoading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Building summary...
+      </div>
+    );
+  }
+
+  if (!summary) {
+    return <p className="text-sm text-muted-foreground">No summary yet.</p>;
+  }
+
+  return (
+    <div className="space-y-3 text-sm">
+      <p className="text-muted-foreground">{summary.summary}</p>
+      <div>
+        <p className="text-xs font-medium uppercase text-muted-foreground">Mood Trend</p>
+        <p className="mt-1 font-medium capitalize">{summary.moodTrend}</p>
+      </div>
+      <div>
+        <p className="text-xs font-medium uppercase text-muted-foreground">Key Themes</p>
+        <div className="mt-1 flex flex-wrap gap-1">
+          {summary.keyThemes.length > 0 ? (
+            summary.keyThemes.map((theme) => (
+              <span
+                key={theme}
+                className="rounded-md bg-primary/10 px-2 py-1 text-xs text-primary"
+              >
+                {theme}
+              </span>
+            ))
+          ) : (
+            <span className="text-xs text-muted-foreground">No themes detected</span>
+          )}
+        </div>
+      </div>
+      <div>
+        <p className="text-xs font-medium uppercase text-muted-foreground">Next Step</p>
+        <p className="mt-1 text-muted-foreground">{summary.suggestedNextStep}</p>
+      </div>
+    </div>
+  );
+}
+
+function SessionSidebar({
   sessions,
   selectedId,
   onSelect,
-  onNew,
   onDelete,
-  isMobile = false,
 }: {
   sessions: ChatSession[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  onNew: () => void;
   onDelete: (id: string) => void;
-  isMobile?: boolean;
 }) {
   return (
-    <div className="h-full bg-background border-r border-border flex flex-col">
-      <div className="p-3 sm:p-4 border-b border-border flex-shrink-0">
-        <div className="flex flex-col gap-3 pr-10 md:pr-0">
-          <Link href="/dashboard" className="w-fit hover:opacity-80 transition-opacity">
-            <p className="font-extrabold text-xl sm:text-2xl md:text-4xl leading-none">ZENLY</p>
-          </Link>
-          <div className="flex items-center w-full gap-3">
-            <div className="flex items-center gap-2 min-w-0">
-              <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              <h2 className="font-semibold text-sm sm:text-lg truncate">Wellness Conversations</h2>
-            </div>
+    <div className="h-full border-r border-border/70 bg-card/60 backdrop-blur-sm">
+      <div className="border-b border-border/70 p-4">
+        <Link href="/dashboard" className="inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 overflow-hidden">
+            <Image src="/zenly-logo.ico" alt="Zenly logo" width={18} height={18} className="h-[18px] w-[18px]" />
           </div>
-        </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Zenly</p>
+            <p className="text-sm font-semibold">Conversations</p>
+          </div>
+        </Link>
       </div>
-      <div className="flex-1 overflow-auto">
+
+      <div className="h-[calc(100%-73px)] overflow-y-auto p-3">
         {sessions.length === 0 ? (
-          <div className="p-4 sm:p-8 text-center">
-            <MessageSquare className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-2 sm:mb-3" />
-            <p className="text-xs sm:text-sm text-muted-foreground">No wellness conversations yet</p>
-            <p className="text-xs text-muted-foreground mt-1">Start your first supportive chat below</p>
+          <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+            No chats yet. Start one to begin tracking your progress.
           </div>
         ) : (
-          <div className="divide-y divide-border">
-            {sessions.map((s) => (
-              <div
-                key={s.id}
-                role="button"
-                tabIndex={0}
+          <div className="space-y-2">
+            {sessions.map((session) => (
+              <button
+                key={session.id}
+                type="button"
+                onClick={() => onSelect(session.id)}
                 className={cn(
-                  "w-full text-left p-3 sm:p-4 hover:bg-muted/50 transition-colors",
-                  selectedId === s.id && "bg-muted border-l-2 border-primary"
+                  "group w-full rounded-xl border p-3 text-left transition",
+                  selectedId === session.id
+                    ? "border-primary/30 bg-primary/10"
+                    : "border-border/60 hover:bg-muted/50"
                 )}
-                onClick={() => onSelect(s.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onSelect(s.id);
-                  }
-                }}
               >
-                <div className="flex items-start gap-2 sm:gap-3">
-                  <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+                <div className="flex items-start gap-2">
+                  <MessageSquare className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {session.title || "New Chat"}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {session.updated_at
+                        ? new Date(session.updated_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "Just now"}
+                    </p>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs sm:text-sm font-medium truncate">{s.title || "New Conversation"}</div>
-                    {s.updated_at && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {new Date(s.updated_at).toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric',
-                          ...(isMobile ? {} : { hour: '2-digit', minute: '2-digit' })
-                        })}
-                      </div>
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                  <span
+                    role="button"
+                    tabIndex={0}
                     aria-label="Delete chat"
-                    className="h-8 w-8 flex-shrink-0"
+                    className="rounded-md p-1 text-muted-foreground opacity-0 transition hover:bg-muted group-hover:opacity-100"
                     onClick={(e) => {
-                      e.preventDefault();
                       e.stopPropagation();
-                      onDelete(s.id);
+                      onDelete(session.id);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onDelete(session.id);
+                      }
                     }}
                   >
                     <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -117,70 +192,87 @@ function SessionList({
   );
 }
 
-function MessageList({ messages }: { messages: ChatMessage[] }) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+function MessagePane({ messages, loading }: { messages: ChatMessage[]; loading: boolean }) {
+  const endRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  if (messages.length === 0) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+          <Bot className="h-7 w-7 text-primary" />
+        </div>
+        <h2 className="text-lg font-semibold">Start a conversation</h2>
+        <p className="mt-2 max-w-md text-sm text-muted-foreground">
+          Share how you are feeling today. Zenly will respond with supportive and practical guidance.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex-1 overflow-auto p-3 sm:p-6 space-y-3 sm:space-y-4">
-      {messages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full text-center px-4">
-          <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
-            <Bot className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-          </div>
-          <h3 className="text-base sm:text-lg font-semibold mb-2">
-            Welcome to Your Wellness Space
-          </h3>
-          <p className="text-sm text-muted-foreground max-w-sm sm:max-w-md">
-            I&apos;m here to support your mental wellness journey. How are you feeling today?
-          </p>
-        </div>
-      ) : (
-        <>
-          {messages.map((m) => (
+    <div className="max-h-[calc(100vh-240px)] overflow-y-auto p-4 sm:p-6">
+      <div className="space-y-4">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={cn("flex gap-3", message.role === "user" ? "justify-end" : "justify-start")}
+          >
+            {message.role === "assistant" && (
+              <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-background">
+                <Bot className="h-4 w-4 text-primary" />
+              </div>
+            )}
+
             <div
-              key={m.id}
               className={cn(
-                "flex gap-2 sm:gap-3 max-w-3xl sm:max-w-4xl",
-                m.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
+                "max-w-[80%] rounded-2xl px-4 py-3 shadow-sm",
+                message.role === "user"
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border/70 bg-card"
               )}
             >
-              <div className="flex-shrink-0">
-                <div className={cn(
-                  "h-6 w-6 sm:h-8 sm:w-8 rounded-full flex items-center justify-center",
-                  m.role === "user" 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted border border-border"
-                )}>
-                  {m.role === "user" ? (
-                    <User className="h-3 w-3 sm:h-4 sm:w-4" />
-                  ) : (
-                    <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-                  )}
-                </div>
-              </div>
-              <div className={cn(
-                "flex-1 px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl",
-                m.role === "user" 
-                  ? "bg-primary text-primary-foreground" 
-                  : "bg-muted border border-border"
-              )}>
-                <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{m.content}</p>
-                <div className="text-xs opacity-70 mt-1">
-                  {new Date(m.created_at).toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </div>
-              </div>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+              <p
+                className={cn(
+                  "mt-2 text-[11px]",
+                  message.role === "user" ? "text-primary-foreground/80" : "text-muted-foreground"
+                )}
+              >
+                {new Date(message.created_at).toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
             </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </>
-      )}
+
+            {message.role === "user" && (
+              <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-background">
+                <User className="h-4 w-4 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+        ))}
+
+        {loading && (
+          <div className="flex items-start gap-3">
+            <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-background">
+              <Bot className="h-4 w-4 text-primary" />
+            </div>
+            <div className="rounded-2xl border border-border/70 bg-card px-4 py-3 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Thinking...
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div ref={endRef} />
+      </div>
     </div>
   );
 }
@@ -193,242 +285,350 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [summary, setSummary] = useState<SessionSummary | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [crisisAlert, setCrisisAlert] = useState<string | null>(null);
+  const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
 
-  async function onDeleteSession(id: string) {
+  const loadSummary = useCallback(async (id: string) => {
+    setSummaryLoading(true);
+    try {
+      const res = await fetch(`/api/chat/sessions/${id}/summary`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to load summary");
+      const data = await res.json();
+      setSummary(data as SessionSummary);
+    } catch {
+      setSummary(null);
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, []);
+
+  const loadSessions = useCallback(async () => {
+    const res = await fetch("/api/chat/sessions", { credentials: "include" });
+    if (res.status === 401) {
+      throw new Error("Please sign in to access chat.");
+    }
+    if (!res.ok) {
+      throw new Error("Failed to load chat sessions");
+    }
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : [];
+    setSessions(list);
+    setSessionId((prev) => prev ?? list[0]?.id ?? null);
+  }, []);
+
+  const loadMessages = useCallback(async (id: string) => {
+    const res = await fetch(`/api/chat/sessions/${id}/messages`, {
+      credentials: "include",
+    });
+    if (!res.ok) {
+      throw new Error("Failed to load messages");
+    }
+    const data = await res.json();
+    setMessages(Array.isArray(data) ? data : []);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    loadSessions().catch((e) => {
+      if (active) setError(e instanceof Error ? e.message : "Failed to load");
+    });
+    return () => {
+      active = false;
+    };
+  }, [loadSessions]);
+
+  useEffect(() => {
+    if (!sessionId) {
+      setMessages([]);
+      setSummary(null);
+      return;
+    }
+
+    loadMessages(sessionId).catch((e) => {
+      setError(e instanceof Error ? e.message : "Failed to load messages");
+    });
+    loadSummary(sessionId);
+  }, [sessionId, loadMessages, loadSummary]);
+
+  const onNewSession = useCallback(async () => {
     setError(null);
     try {
+      const res = await fetch("/api/chat/sessions", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      if (!res.ok) throw new Error("Failed to create chat session");
+      const data = await res.json();
+      const now = new Date().toISOString();
+      const next: ChatSession = {
+        id: data.id,
+        title: data.title || "Chat",
+        created_at: now,
+        updated_at: now,
+      };
+
+      setSessions((prev) => [next, ...prev]);
+      setSessionId(data.id);
+      setMessages([]);
+      setSummary(null);
+      setCrisisAlert(null);
+      setSidebarOpen(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create session");
+    }
+  }, []);
+
+  const onDeleteSession = useCallback(
+    async (id: string) => {
       const ok = window.confirm("Delete this chat?");
       if (!ok) return;
 
-      const res = await fetch(`/api/chat/sessions/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to delete chat");
+      try {
+        const res = await fetch(`/api/chat/sessions/${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
 
-      let nextSelected: string | null = null;
-      setSessions((prev) => {
-        const remaining = prev.filter((s) => s.id !== id);
-        if (id === sessionId) nextSelected = remaining[0]?.id ?? null;
-        return remaining;
-      });
-      setMessages((prev) => (id === sessionId ? [] : prev));
-      setSessionId((prev) => (prev === id ? nextSelected : prev));
-      setSidebarOpen(false);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      setError(message || "Failed to delete chat");
-    }
-  }
+        if (!res.ok) throw new Error("Failed to delete chat");
 
-  // Load sessions on mount
-  useEffect(() => {
-    let mounted = true;
-    fetch("/api/chat/sessions", { credentials: "include" })
-      .then(async (res) => {
-        if (res.status === 401) throw new Error("Please sign in to view your chats.");
-        if (!res.ok) throw new Error("Failed to load chat sessions");
-        const data = await res.json();
-        if (mounted) {
-          setSessions(Array.isArray(data) ? data : []);
-          setSessionId(data?.[0]?.id ?? null);
-        }
-      })
-      .catch((e) => setError(e.message));
-    return () => { mounted = false; };
-  }, []);
+        setSessions((prev) => {
+          const next = prev.filter((s) => s.id !== id);
+          if (sessionId === id) {
+            setSessionId(next[0]?.id ?? null);
+            setMessages([]);
+            setSummary(null);
+            setCrisisAlert(null);
+          }
+          return next;
+        });
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to delete chat");
+      }
+    },
+    [sessionId]
+  );
 
-  // Load messages for selected session
-  useEffect(() => {
-    if (!sessionId) { setMessages([]); return; }
-    let mounted = true;
-    fetch(`/api/chat/sessions/${sessionId}/messages`, { credentials: "include" })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to load messages");
-        const data = await res.json();
-        if (mounted) setMessages(data);
-      })
-      .catch((e) => setError(e.message));
-    return () => { mounted = false; };
-  }, [sessionId]);
+  const canSend = useMemo(
+    () => Boolean(sessionId && input.trim().length > 0 && !loading),
+    [sessionId, input, loading]
+  );
 
-  async function onNewSession() {
-    setError(null);
-    try {
-      const res = await fetch("/api/chat/sessions", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
-      if (!res.ok) throw new Error("Failed to create chat session");
-      const data = await res.json();
-      const next = [{ id: data.id, title: data.title || "Chat" }, ...sessions];
-      setSessions(next);
-      setSessionId(data.id);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      setError(message || "Failed to create session");
-    }
-  }
+  const onSend = useCallback(async () => {
+    if (!sessionId || !input.trim() || loading) return;
 
-  const canSend = useMemo(() => input.trim().length > 0 && !!sessionId && !loading, [input, sessionId, loading]);
-
-  async function onSend() {
-    if (!sessionId || !input.trim()) return;
     const content = input.trim();
     setInput("");
     setLoading(true);
     setError(null);
-    const tempId = `tmp-${Date.now()}`;
-    setMessages((prev) => [...prev, { id: tempId, role: "user", content, created_at: new Date().toISOString() }]);
+    setCrisisAlert(null);
 
-    const titleCandidate = content
-      .replace(/\s+/g, " ")
-      .trim()
-      .split(" ")
-      .slice(0, 6)
-      .join(" ")
-      .slice(0, 48);
-    if (titleCandidate) {
-      setSessions((prev) =>
-        prev.map((s) => (s.id === sessionId && (!s.title || s.title === "Chat") ? { ...s, title: titleCandidate } : s))
-      );
-    }
+    const optimistic: ChatMessage = {
+      id: `tmp-${Date.now()}`,
+      role: "user",
+      content,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
 
     try {
       const res = await fetch(`/api/chat/sessions/${sessionId}/generate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
+
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || "Model error");
+        throw new Error(text || "Failed to generate response");
       }
+
       const data = await res.json();
-      const assistantText = data?.message ?? "";
       setMessages((prev) => [
         ...prev,
-        { id: data?.id ?? `asst-${Date.now()}`, role: "assistant", content: assistantText, created_at: new Date().toISOString() },
+        {
+          id: data?.id ?? `asst-${Date.now()}`,
+          role: "assistant",
+          content: data?.message ?? "",
+          created_at: new Date().toISOString(),
+        },
       ]);
-      // Update session updated_at order optimistically
+      if (data?.crisisMode) {
+        setCrisisAlert(
+          "Crisis safety mode is active. If you are in immediate danger call 911. You can also call or text 988."
+        );
+      }
+
       setSessions((prev) => {
         const idx = prev.findIndex((s) => s.id === sessionId);
-        if (idx === -1) return prev;
-        const updated = { ...prev[idx], updated_at: new Date().toISOString() };
-        const rest = [...prev];
-        rest.splice(idx, 1);
-        return [updated, ...rest];
+        if (idx < 0) return prev;
+
+        const titleCandidate =
+          content
+            .replace(/\s+/g, " ")
+            .trim()
+            .split(" ")
+            .slice(0, 6)
+            .join(" ")
+            .slice(0, 48) || prev[idx].title || "Chat";
+
+        const updated = {
+          ...prev[idx],
+          title: prev[idx].title && prev[idx].title !== "Chat" ? prev[idx].title : titleCandidate,
+          updated_at: new Date().toISOString(),
+        };
+
+        const next = [...prev];
+        next.splice(idx, 1);
+        return [updated, ...next];
       });
+      await loadSummary(sessionId);
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      setError(message || "Failed to send message");
+      setError(e instanceof Error ? e.message : "Failed to send message");
     } finally {
       setLoading(false);
     }
-  }
+  }, [sessionId, input, loading, loadSummary]);
 
   return (
-    <div className="h-screen bg-background flex overflow-hidden">
+    <div className="relative h-screen overflow-hidden bg-background">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
+      </div>
+
       {sidebarOpen && (
         <button
           type="button"
-          aria-label="Close sidebar"
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
           onClick={() => setSidebarOpen(false)}
+          aria-label="Close sidebar"
         />
       )}
 
-      {/* Mobile Sidebar */}
-      <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-72 sm:w-80 bg-background border-r border-border transform transition-transform duration-300 ease-in-out md:hidden",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Close sidebar"
-          className="absolute right-2 top-2 z-10 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-        <SessionList
-          sessions={sessions}
-          selectedId={sessionId}
-          onSelect={(id) => {
-            setSessionId(id);
-            setSidebarOpen(false);
-          }}
-          onNew={() => {
-            onNewSession();
-            setSidebarOpen(false);
-          }}
-          onDelete={onDeleteSession}
-          isMobile={true}
-        />
-      </div>
-
-      {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-72 lg:w-80 h-full flex-shrink-0">
-        <SessionList
-          sessions={sessions}
-          selectedId={sessionId}
-          onSelect={setSessionId}
-          onNew={onNewSession}
-          onDelete={onDeleteSession}
-        />
-      </div>
-
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full min-w-0">
-        {/* Header */}
-        <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
-          <div className="flex items-center justify-between p-3 sm:p-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSidebarOpen((v) => !v)}
-                className="md:hidden p-2"
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
-              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-              </div>
-              <div>
-                <h1 className="font-semibold text-sm sm:text-lg">Wellness Assistant</h1>
-                <p className="text-xs text-muted-foreground hidden sm:block">Your compassionate mental health companion</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <AnimatedThemeToggler />
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={onNewSession}
-                className="gap-1 sm:gap-2 h-8 sm:h-auto px-2 sm:px-3"
-              >
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">New</span>
-              </Button>
-            </div>
-          </div>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-80 transform transition-transform duration-300 md:hidden",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="relative h-full">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2 z-10"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close sidebar"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          <SessionSidebar
+            sessions={sessions}
+            selectedId={sessionId}
+            onSelect={(id) => {
+              setSessionId(id);
+              setSidebarOpen(false);
+            }}
+            onDelete={onDeleteSession}
+          />
         </div>
+      </aside>
 
-        {/* Messages */}
-        <MessageList messages={messages} />
+      <div className="relative z-10 flex h-full">
+        <aside className="hidden h-full w-80 shrink-0 md:block">
+          <SessionSidebar
+            sessions={sessions}
+            selectedId={sessionId}
+            onSelect={setSessionId}
+            onDelete={onDeleteSession}
+          />
+        </aside>
 
-        {/* Input Area */}
-        <div className="border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
-          {error && (
-            <div className="mx-3 sm:mx-4 mt-3 sm:mt-4 p-2 sm:p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <p className="text-xs sm:text-sm text-destructive">{error}</p>
+        <main className="flex min-w-0 flex-1 flex-col">
+          <header className="border-b border-border/70 bg-background/80 backdrop-blur-sm">
+            <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden"
+                  onClick={() => setSidebarOpen((v) => !v)}
+                  aria-label="Toggle sidebar"
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+
+                <div>
+                  <h1 className="text-sm font-semibold sm:text-base">
+                    {sessions.find((s) => s.id === sessionId)?.title || "Wellness Assistant"}
+                  </h1>
+                  <p className="text-xs text-muted-foreground">Private and supportive conversation space</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 lg:hidden"
+                  onClick={() => setMobileSummaryOpen(true)}
+                >
+                  <ClipboardList className="h-4 w-4" />
+                  <span>Summary</span>
+                </Button>
+                <AnimatedThemeToggler />
+                <Button size="sm" onClick={onNewSession} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">New Chat</span>
+                </Button>
+              </div>
             </div>
-          )}
-          <div className="p-3 sm:p-4 pb-[env(safe-area-inset-bottom,1rem)]">
-            <div className="flex gap-2 sm:gap-3 max-w-3xl sm:max-w-4xl mx-auto">
-              <div className="flex-1 relative">
+          </header>
+
+          <section className="min-h-0 flex-1 overflow-y-auto">
+            <div className="mx-auto grid h-full w-full max-w-6xl grid-cols-1 gap-4 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_20rem] sm:px-6">
+              <div className="min-w-0 flex-1 rounded-2xl border border-border/70 bg-card/60">
+                {crisisAlert && (
+                  <div className="mx-4 mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-700 dark:text-rose-300">
+                    <span className="inline-flex items-center gap-2">
+                      <ShieldAlert className="h-4 w-4" />
+                      {crisisAlert}
+                    </span>
+                  </div>
+                )}
+                <MessagePane messages={messages} loading={loading} />
+              </div>
+
+              <aside className="hidden lg:block">
+                <div className="rounded-2xl border border-border/70 bg-card/60 p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-semibold">Session Summary</h3>
+                  </div>
+                  <SummaryPanel summaryLoading={summaryLoading} summary={summary} />
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <footer className="border-t border-border/70 bg-background/80 px-4 py-3 backdrop-blur-sm sm:px-6">
+            <div className="mx-auto grid w-full max-w-6xl grid-cols-1 lg:grid-cols-[minmax(0,1fr)_20rem]">
+              <div>
+              {error && (
+                <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex items-end gap-2">
                 <Input
-                  placeholder="Share how you're feeling..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -437,36 +637,38 @@ export default function ChatPage() {
                       onSend();
                     }
                   }}
-                  className="resize-none h-10 sm:h-12 pr-10 sm:pr-12 bg-background border-border focus:border-primary text-sm"
+                  placeholder="Write your message..."
                   disabled={!sessionId || loading}
+                  className="h-11 border-border/70 bg-card"
                 />
+                <Button onClick={onSend} disabled={!canSend} size="icon" className="h-11 w-11 shrink-0">
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </Button>
               </div>
-              <Button 
-                onClick={onSend} 
-                disabled={!canSend}
-                size="lg"
-                className="gap-1 sm:gap-2 px-3 sm:px-6 bg-primary hover:bg-primary/90 h-10 sm:h-12"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                    <span className="hidden sm:inline">Thinking compassionately...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Send</span>
-                  </>
-                )}
-              </Button>
+
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                Press Enter to send. Your chats are saved automatically.
+              </p>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              Press Enter to send, Shift+Enter for new line
-              <span className="block mt-1 text-primary/60">Remember: I'm here to support you 💚</span>
-            </p>
-          </div>
-        </div>
+          </footer>
+        </main>
       </div>
+
+      <Dialog open={mobileSummaryOpen} onOpenChange={setMobileSummaryOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-primary" />
+              Session Summary
+            </DialogTitle>
+            <DialogDescription>
+              AI recap of your current conversation.
+            </DialogDescription>
+          </DialogHeader>
+          <SummaryPanel summaryLoading={summaryLoading} summary={summary} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

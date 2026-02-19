@@ -15,7 +15,8 @@ export interface ActivityRecord {
 
 const activitiesStore: ActivityRecord[] = [];
 
-export async function getUserActivities(_userId: string): Promise<ActivityRecord[]> {
+export async function getUserActivities(userId: string): Promise<ActivityRecord[]> {
+  void userId;
   return [...activitiesStore];
 }
 

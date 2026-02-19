@@ -39,10 +39,6 @@ export default function ChatAIInsights({ sessions, messages, onActionClick }: Ch
   const [insights, setInsights] = useState<ChatAIInsight[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    generateInsights();
-  }, [sessions, messages]);
-
   const generateInsights = useCallback(() => {
     setLoading(true);
     const newInsights: ChatAIInsight[] = [];
@@ -245,6 +241,10 @@ export default function ChatAIInsights({ sessions, messages, onActionClick }: Ch
     setInsights(newInsights.slice(0, 4)); // Show top 4 insights
     setLoading(false);
   }, [sessions, messages]);
+
+  useEffect(() => {
+    generateInsights();
+  }, [generateInsights]);
 
   const getInsightIcon = (type: string) => {
     switch (type) {
