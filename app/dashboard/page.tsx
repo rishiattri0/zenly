@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
@@ -25,110 +25,34 @@ import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { BentoGrid } from "@/components/ui/bento-grid";
 import { cn } from "@/lib/utils";
-import { getUserActivities } from "@/lib/static-dashboard-data";
 import MoodTracker from "@/components/mood/mood-tracker";
 import MoodSessionsChart from "@/components/mood/mood-sessions-chart";
 import MoodForm from "@/components/mood/mood-form";
 import ActivityLogger from "@/components/activities/activity-logger";
 import ChatAIInsights from "@/components/ai/chat-ai-insights";
-import {
-  addDays,
-  format,
-  startOfDay,
-  isWithinInterval,
-} from "date-fns";
+import { format } from "date-fns";
 import { useSession } from "@/lib/contexts/session-context";
-import { getAllChatSessions } from "@/lib/api/chat";
 import FooterSection from "@/components/footer";
-
-// Type definitions
-interface Activity {
-  id: string;
-  userId: string | null;
-  type: string;
-  name: string;
-  description: string | null;
-  timestamp: Date;
-  duration: number | null;
-  completed: boolean;
-  moodScore: number | null;
-  moodNote: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  created_at: string;
-}
-
-interface ChatSession {
-  id: string;
-  title?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface ChatAIInsight {
-  id: string;
-  title: string;
-  description: string;
-  type: "progress" | "recommendation" | "pattern" | "achievement" | "concern";
-  priority: "high" | "medium" | "low";
-  actionable: boolean;
-  data?: Record<string, unknown>;
-}
-
-// Add this interface for stats
-interface DailyStats {
-  moodScore: number | null;
-  completionRate: number;
-  mindfulnessCount: number;
-  totalActivities: number;
-  lastUpdated: Date;
-}
-
-// Update the calculateDailyStats function to show correct stats
-const calculateDailyStats = (activities: Activity[]): DailyStats => {
-  const today = startOfDay(new Date());
-  const todaysActivities = activities.filter((activity) =>
-    isWithinInterval(new Date(activity.timestamp), {
-      start: today,
-      end: addDays(today, 1),
-    })
-  );
-
-  // Calculate mood score (average of today's mood entries)
-  const moodEntries = todaysActivities.filter(
-    (a) => a.type === "mood" && a.moodScore !== null
-  );
-  const averageMood =
-    moodEntries.length > 0
-      ? Math.round(
-          moodEntries.reduce((acc, curr) => acc + (curr.moodScore || 0), 0) /
-            moodEntries.length
-        )
-      : null;
-
-  // Count therapy sessions (all sessions ever)
-  const therapySessions = activities.filter((a) => a.type === "therapy").length;
-
-  return {
-    moodScore: averageMood,
-    completionRate: 100, // Always 100% as requested
-    mindfulnessCount: therapySessions, // Total number of therapy sessions
-    totalActivities: todaysActivities.length,
-    lastUpdated: new Date(),
-  };
-};
+import { useDashboard } from "@/hooks/use-dashboard";
+import type { ChatAIInsight } from "@/lib/types";
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showMoodModal, setShowMoodModal] = useState(false);
+  const [showActivityLogger, setShowActivityLogger] = useState(false);
+
   const router = useRouter();
   const { user, isAuthenticated, loading: sessionLoading } = useSession();
+  const {
+    chatMessages,
+    chatSessions,
+    dailyStats,
+    chatInsights,
+    refreshingStats,
+    loadActivities,
+    fetchDailyStats,
+  } = useDashboard();
 
   useEffect(() => {
     if (!sessionLoading && !isAuthenticated) {
@@ -136,173 +60,40 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, sessionLoading, router]);
 
-  // New states for activities and wearables
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [showMoodModal, setShowMoodModal] = useState(false);
-  const [showActivityLogger, setShowActivityLogger] = useState(false);
-  const [refreshingStats, setRefreshingStats] = useState(false);
-  const [dailyStats, setDailyStats] = useState<DailyStats>({
-    moodScore: null,
-    completionRate: 100,
-    mindfulnessCount: 0,
-    totalActivities: 0,
-    lastUpdated: new Date(),
-  });
-
-  // Chat insights state
-  const [chatInsights, setChatInsights] = useState<{
-    totalSessions: number;
-    totalMessages: number;
-    lastActivityAt: string | null;
-    avgMessagesPerSession: number;
-  }>({ totalSessions: 0, totalMessages: 0, lastActivityAt: null, avgMessagesPerSession: 0 });
-
-  // Chat messages state for AI insights
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
-
-  
-  const loadActivities = useCallback(async () => {
-    try {
-      const res = await fetch("/api/activities", { credentials: "include" });
-      if (!res.ok) {
-        const fallback = await getUserActivities("default-user");
-        setActivities(fallback);
-        return;
-      }
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : [];
-      setActivities(list);
-    } catch (error) {
-      console.error("Error loading activities:", error);
-      const fallback = await getUserActivities("default-user");
-      setActivities(fallback);
-    }
-  }, []);
-
   useEffect(() => {
     setMounted(true);
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Load chat insights on mount
-  useEffect(() => {
-    const loadChatInsights = async () => {
-      try {
-        const res = await fetch("/api/chat/insights", { credentials: "include" });
-        if (!res.ok) return;
-        const data = await res.json();
-        setChatInsights({
-          totalSessions: Number(data.totalSessions) || 0,
-          totalMessages: Number(data.totalMessages) || 0,
-          lastActivityAt: data.lastActivityAt || null,
-          avgMessagesPerSession: Number(data.avgMessagesPerSession) || 0,
-        });
-      } catch {
-        // no-op
-      }
-    };
-    loadChatInsights();
-    const interval = setInterval(loadChatInsights, 3 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Add this effect to update stats when activities change
-  useEffect(() => {
-    if (activities.length > 0) {
-      setDailyStats(calculateDailyStats(activities));
-    }
-  }, [activities]);
-
-  // Add function to fetch daily stats
-  const fetchDailyStats = useCallback(async () => {
-    setRefreshingStats(true);
+  const handleMoodSubmit = async (data: {
+    moodScore: number;
+    note?: string;
+  }) => {
     try {
-      const sessions = await getAllChatSessions();
-      
-      // Get mood data from mood API
-      let moodScore = null;
-      try {
-        const moodResponse = await fetch("/api/mood", { credentials: "include" });
-        if (moodResponse.ok) {
-          const moods = await moodResponse.json();
-          if (Array.isArray(moods) && moods.length > 0) {
-            const averageMood = Math.round(
-              moods.reduce((acc: number, mood: { score: number }) => acc + mood.score, 0) / moods.length
-            );
-            moodScore = averageMood;
-          }
-        }
-      } catch {
-        // If mood API fails, try activities as fallback
-        let activities: Activity[] = [];
-        try {
-          const activitiesResponse = await fetch("/api/activities", { credentials: "include" });
-          if (activitiesResponse.ok) {
-            activities = await activitiesResponse.json();
-          }
-        } catch {
-          activities = [];
-        }
-        const today = new Date().toDateString();
-        const moodEntries = activities.filter(
-          (a: Activity) =>
-            a.type === "mood" &&
-            new Date(a.timestamp).toDateString() === today &&
-            a.moodScore !== null
-        );
-        if (moodEntries.length > 0) {
-          moodScore = Math.round(
-            moodEntries.reduce(
-              (acc: number, curr: Activity) => acc + (curr.moodScore || 0),
-              0
-            ) / moodEntries.length
-          );
-        }
-      }
-      
-      // Get today's activities count
-      let todaysActivitiesCount = 0;
-      try {
-        const activitiesResponse = await fetch("/api/activities", { credentials: "include" });
-        if (activitiesResponse.ok) {
-          const allActivities = await activitiesResponse.json();
-          const today = new Date().toDateString();
-          todaysActivitiesCount = allActivities.filter((activity: { timestamp: string }) => 
-            new Date(activity.timestamp).toDateString() === today
-          ).length;
-        }
-      } catch {
-        // Fallback to local activities state
-        const today = new Date().toDateString();
-        todaysActivitiesCount = activities.filter((activity: { timestamp: Date }) => 
-          new Date(activity.timestamp).toDateString() === today
-        ).length;
-      }
-      
-      setDailyStats({
-        moodScore: moodScore,
-        completionRate: 100,
-        mindfulnessCount: sessions.length,
-        totalActivities: todaysActivitiesCount,
-        lastUpdated: new Date(),
+      const res = await fetch("/api/mood", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ score: data.moodScore, note: data.note }),
+        credentials: "include",
       });
+      if (res.ok) {
+        setShowMoodModal(false);
+        fetchDailyStats();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        console.error("Mood save error:", err?.error);
+      }
     } catch (error) {
-      console.error("Error fetching daily stats:", error);
-    } finally {
-      setRefreshingStats(false);
+      console.error("Error saving mood:", error);
     }
-  }, [activities]);
+  };
 
-  // Fetch stats on mount and every 5 minutes
-  useEffect(() => {
-    fetchDailyStats();
-    const interval = setInterval(fetchDailyStats, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [fetchDailyStats]);
+  const handleActivityLogged = () => {
+    setShowActivityLogger(false);
+    loadActivities();
+  };
 
-  // Update wellness stats to reflect the changes
   const wellnessStats = [
     {
       title: "Mood Score",
@@ -338,71 +129,6 @@ export default function Dashboard() {
     },
   ];
 
-  // Load activities on mount
-  useEffect(() => {
-    loadActivities();
-  }, [loadActivities]);
-
-  // Fetch chat sessions and messages on mount
-  useEffect(() => {
-    const fetchChatData = async () => {
-      try {
-        const sessions = await getAllChatSessions();
-        setChatSessions(sessions);
-        
-        // Fetch messages for all sessions
-        const allMessages: ChatMessage[] = [];
-        for (const session of sessions) {
-          try {
-            const res = await fetch(`/api/chat/sessions/${session.id}/messages`, { credentials: "include" });
-            if (res.ok) {
-              const sessionMessages = await res.json();
-              allMessages.push(...sessionMessages);
-            }
-          } catch (error) {
-            console.error("Error fetching messages for session", session.id, error);
-          }
-        }
-        setChatMessages(allMessages);
-      } catch (error) {
-        console.error("Error fetching chat sessions:", error);
-      }
-    };
-    
-    fetchChatData();
-  }, []);
-
-  // Add these action handlers
-  const handleStartTherapy = () => {
-    router.push("/chat");
-  };
-
-  const handleActivityLogged = () => {
-    setShowActivityLogger(false);
-    loadActivities();
-  };
-
-  const handleMoodSubmit = async (data: { moodScore: number; note?: string }) => {
-    try {
-      const res = await fetch("/api/mood", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ score: data.moodScore, note: data.note }),
-        credentials: "include",
-      });
-      if (res.ok) {
-        setShowMoodModal(false);
-        fetchDailyStats();
-      } else {
-        const err = await res.json().catch(() => ({}));
-        console.error("Mood save error:", err?.error);
-      }
-    } catch (error) {
-      console.error("Error saving mood:", error);
-    }
-  };
-
-
   if (!mounted || sessionLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -411,47 +137,53 @@ export default function Dashboard() {
     );
   }
 
+  const greeting = (() => {
+    const hour = currentTime.getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    if (hour < 21) return "Good evening";
+    return "Good night";
+  })();
+
   return (
     <div className="relative min-h-screen bg-background flex flex-col overflow-hidden">
+      {/* Background blobs */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-32 -right-32 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute top-40 -left-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
-      <div className="flex-1 relative">
-      <Container className="pt-24 md:pt-28 pb-8 space-y-6 relative">
-        {/* Header Section */}
-        <div className="flex justify-between items-center rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm px-5 py-4 shadow-sm">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-2"
-          >
-            <h1 className="text-3xl font-bold text-foreground">
-              {(() => {
-                const hour = currentTime.getHours();
-                if (hour < 12) return "Good morning";
-                if (hour < 17) return "Good afternoon";
-                if (hour < 21) return "Good evening";
-                return "Good night";
-              })()}, {user?.name || "there"}
-            </h1>
-            <p className="text-muted-foreground">
-              {currentTime.toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-            <p className="text-sm text-muted-foreground/80">
-              Your daily command center for mental wellness.
-            </p>
-          </motion.div>
-        </div>
 
-        {/* Main Grid Layout */}
-        <BentoGrid className="grid-cols-1 auto-rows-auto gap-4 md:grid-cols-2 xl:grid-cols-6">
-          {/* Quick Actions Card */}
-          <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm relative overflow-hidden group transition hover:shadow-md md:col-span-2 xl:col-span-2">
+      <div className="flex-1 relative">
+        <Container className="pt-24 md:pt-28 pb-8 space-y-6 relative">
+
+          {/* Header */}
+          <div className="flex justify-between items-center rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm px-5 py-4 shadow-sm">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-2"
+            >
+              <h1 className="text-3xl font-bold text-foreground">
+                {greeting}, {user?.name || "there"}
+              </h1>
+              <p className="text-muted-foreground">
+                {currentTime.toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+              <p className="text-sm text-muted-foreground/80">
+                Your daily command center for mental wellness.
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Main Grid */}
+          <BentoGrid className="grid-cols-1 auto-rows-auto gap-4 md:grid-cols-2 xl:grid-cols-6">
+
+            {/* Quick Actions */}
+            <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm relative overflow-hidden group transition hover:shadow-md md:col-span-2 xl:col-span-2">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent" />
               <CardContent className="p-6 relative">
                 <div className="space-y-6">
@@ -476,19 +208,15 @@ export default function Dashboard() {
                         "border border-border/40 dark:border-border/30",
                         "transition-all duration-200 group-hover:translate-y-[-2px]"
                       )}
-                      onClick={handleStartTherapy}
+                      onClick={() => router.push("/chat")}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center border border-black/10 dark:border-white/10">
                           <MessageSquare className="w-4 h-4 text-current" />
                         </div>
                         <div className="text-left">
-                          <div className="font-semibold text-current">
-                            Start Therapy
-                          </div>
-                          <div className="text-xs text-current/80">
-                            Begin a new session
-                          </div>
+                          <div className="font-semibold text-current">Start Therapy</div>
+                          <div className="text-xs text-current/80">Begin a new session</div>
                         </div>
                       </div>
                       <div className="opacity-0 group-hover/button:opacity-100 transition-opacity">
@@ -540,10 +268,10 @@ export default function Dashboard() {
                   </div>
                 </div>
               </CardContent>
-          </Card>
+            </Card>
 
-          {/* Today's Overview Card */}
-          <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm transition hover:shadow-md md:col-span-2 xl:col-span-2">
+            {/* Today's Overview */}
+            <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm transition hover:shadow-md md:col-span-2 xl:col-span-2">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
@@ -589,22 +317,21 @@ export default function Dashboard() {
                   Last updated: {format(dailyStats.lastUpdated, "h:mm a")}
                 </div>
               </CardContent>
-          </Card>
+            </Card>
 
-          {/* Chat AI Insights Card */}
-          <div className="md:col-span-2 xl:col-span-2">
-            <ChatAIInsights 
-              sessions={chatSessions} 
-              messages={chatMessages}
-              onActionClick={(insight: ChatAIInsight) => {
-                console.log("Chat AI Insight clicked:", insight);
-                // Handle AI insight actions here
-              }}
-            />
-          </div>
+            {/* Chat AI Insights */}
+            <div className="md:col-span-2 xl:col-span-2">
+              <ChatAIInsights
+                sessions={chatSessions}
+                messages={chatMessages}
+                onActionClick={(insight: ChatAIInsight) => {
+                  console.log("Chat AI Insight clicked:", insight);
+                }}
+              />
+            </div>
 
-          {/* Chat Insights Card */}
-          <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm transition hover:shadow-md md:col-span-2 xl:col-span-2">
+            {/* Chat Insights */}
+            <Card className="border-primary/20 bg-card/80 backdrop-blur-sm shadow-sm transition hover:shadow-md md:col-span-2 xl:col-span-2">
               <CardHeader>
                 <CardTitle>Chat Insights</CardTitle>
                 <CardDescription>Overview of your conversations</CardDescription>
@@ -621,7 +348,9 @@ export default function Dashboard() {
                   </div>
                   <div className="p-4 rounded-lg bg-primary/10">
                     <p className="text-sm text-muted-foreground">Avg Msgs / Chat</p>
-                    <p className="text-2xl font-bold mt-1">{chatInsights.avgMessagesPerSession.toFixed(1)}</p>
+                    <p className="text-2xl font-bold mt-1">
+                      {chatInsights.avgMessagesPerSession.toFixed(1)}
+                    </p>
                   </div>
                   <div className="p-4 rounded-lg bg-primary/10">
                     <p className="text-sm text-muted-foreground">Last Activity</p>
@@ -633,26 +362,27 @@ export default function Dashboard() {
                   </div>
                 </div>
               </CardContent>
-          </Card>
+            </Card>
 
-          {/* Trend Chart */}
-          <div className="md:col-span-2 xl:col-span-4">
-            <MoodSessionsChart />
-          </div>
+            {/* Mood Chart */}
+            <div className="md:col-span-2 xl:col-span-4">
+              <MoodSessionsChart />
+            </div>
 
-          {/* Mood Tracker */}
-          <div className="md:col-span-1 xl:col-span-3">
-            <MoodTracker onMoodUpdate={fetchDailyStats} />
-          </div>
+            {/* Mood Tracker */}
+            <div className="md:col-span-1 xl:col-span-3">
+              <MoodTracker onMoodUpdate={fetchDailyStats} />
+            </div>
 
-          {/* Activity Logger */}
-          <div className="md:col-span-1 xl:col-span-3">
-            <ActivityLogger onActivityLogged={handleActivityLogged} />
-          </div>
-        </BentoGrid>
-      </Container>
+            {/* Activity Logger */}
+            <div className="md:col-span-1 xl:col-span-3">
+              <ActivityLogger onActivityLogged={handleActivityLogged} />
+            </div>
+          </BentoGrid>
+        </Container>
+      </div>
 
-      {/* Mood tracking modal */}
+      {/* Mood Modal */}
       {showMoodModal && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-background border rounded-lg shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -677,7 +407,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Activity logger modal */}
+      {/* Activity Logger Modal */}
       {showActivityLogger && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-background border rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -697,8 +427,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
-      </div>
 
       <footer className="mt-auto">
         <FooterSection />
