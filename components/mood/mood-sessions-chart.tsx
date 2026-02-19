@@ -202,7 +202,7 @@ export default function MoodSessionsChart() {
               <Area
                 yAxisId="mood"
                 dataKey="moodScore"
-                type="natural"
+                type="monotone"
                 stroke="var(--color-moodScore)"
                 fill="url(#fillMoodScore)"
                 strokeWidth={2}
@@ -211,7 +211,7 @@ export default function MoodSessionsChart() {
               <Area
                 yAxisId="sessions"
                 dataKey="sessions"
-                type="natural"
+                type="monotone"
                 stroke="var(--color-sessions)"
                 fill="url(#fillSessions)"
                 strokeWidth={2}
